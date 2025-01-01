@@ -7,7 +7,7 @@ const videoIds = ["1043181960", "1043211102", "1043179505", "1043211930"];
 const VimeoGrid = () => {
   const players = useRef(new Map()); // Ref to store player instances
   const [isModalOpen, setModalOpen] = useState(false);
-  const [selectedVideo, setSelectedVideo] = useState();
+  const [selectedVideo, setSelectedVideo] = useState(null);
 
   useEffect(() => {
     const script = document.createElement("script");
