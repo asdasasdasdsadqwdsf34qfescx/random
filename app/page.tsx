@@ -60,16 +60,6 @@ const VimeoGrid = () => {
     });
   };
 
-  // Play video by ID
-  const playVideoById = (videoId: string) => {
-    const player = players.current.get(videoId);
-    if (player) {
-      player.play();
-    } else {
-      console.error(`Player for video ID ${videoId} not found.`);
-    }
-  };
-
   return (
     <div>
       {/* Video Grid */}
@@ -95,16 +85,10 @@ const VimeoGrid = () => {
         ))}
       </div>
 
-      {/* Example Button to Control a Video */}
-      <button onClick={() => playVideoById("1043181960")}>
-        Play Video 1
-      </button>
-
       <style jsx>{`
         .video-grid {
           display: grid;
           grid-template-columns: repeat(4, 1fr); /* 4 equal columns */
-          gap: 20px;
         }
         .video-container {
           position: relative;
@@ -113,7 +97,7 @@ const VimeoGrid = () => {
         iframe {
           position: absolute;
           top: 0;
-          left: 0;
+  S        left: 0;
           width: 100%;
           height: 100%;
           border: 0;
