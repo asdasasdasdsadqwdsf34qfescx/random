@@ -54,7 +54,7 @@ const VimeoGrid = () => {
     });
   };
 
-  const openModal = (videoId: string) => {
+  const openModal = (videoId: any) => {
     setSelectedVideo(videoId);
     setModalOpen(true);
   };
