@@ -2,7 +2,28 @@
 
 import { useEffect, useState, useRef } from "react";
 
-const videoIds = ["1043181960", "1043211102", "1043179505", "1043211930"];
+const videoIds = [
+  "4491d7b41f19efc5cd/b3e51782f2c4b3f0",
+  "0691d7b41f19eece8f/d0ec49e076efe9ad",
+  "ea91d7b41f19eeca63/10d0bc5ed1ed6ca2",
+  "4491d7b41f19eec4cd/160b35d4d0617a0c",
+  "4d91d7b41f1ae4c0c4/e4cf905ba65d31c6",
+  "4d91d7b41f1ae5c1c4/6db93740911ac943",
+  "a791d7b41f1ae4c22e/8c99b93f4e1624d2",
+  "1191d7b41f1ae4cc98/a28a8ff2e4e6b992",
+  "7091d7b41f1ae5c0f9/80e7196e258bb614",
+  "a791d7b41f1ae5c32e/13780a3bbb2f160a",
+  "ea91d7b41f1ae5c263/980c1e3c91d2c812",
+  "1191d7b41f1ae5cd98/c61ca83479d2f93a",
+  "7991d7b41f1ae6c6f0/0d90fbe3e2aed503",
+  "ac91d7b41f1ae6c725/79745221e1b034e1",
+  "d391d7b41f1ae6c45a/77cefaf247f93001",
+  "4d91d7b41f1ae6c2c4/53adf8c3f46ba5b7",
+  "4491d7b41f1ae6cfcd/214c69ba0969a69d",
+  "a791d7b41f1ae6c02e/a12782765939bd88",
+  "1191d7b41f1ae6ce98/6c4ec36a9a407c41",
+];
+
 
 const VimeoGrid = () => {
   const players = useRef(new Map()); // Ref to store player instances
@@ -108,13 +129,13 @@ const VimeoGrid = () => {
               }}
             ></div>
 
-            {/* Vimeo iFrame */}
+            {/* Dynamic Vimeo iFrame */}
             <iframe
               data-vimeo
               data-id={id}
-              src={`https://player.vimeo.com/video/${id}?badge=0&autopause=0&player_id=${i}&app_id=58479&background=1&autoplay=0`}
+              src={`https://videos.sproutvideo.com/embed/${id}?bigPlayButton=false&showControls=false`}
               frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture; clipboard-write"
+              allow="autoplay; fullscreen; picture-in-picture; clipboard-write,background"
               style={{
                 position: "absolute",
                 top: 0,
@@ -124,7 +145,7 @@ const VimeoGrid = () => {
                 border: "0",
               }}
               title={`Video ${i + 1}`}
-            ></iframe>
+            />
           </div>
         ))}
       </div>
@@ -133,14 +154,14 @@ const VimeoGrid = () => {
         <div className="modal" onClick={closeModal}>
           <div className="modal-content" onClick={(e) => e.stopPropagation()}>
             <iframe
-              src={`https://player.vimeo.com/video/${selectedVideo}?autoplay=1`}
+              className="sproutvideo-player"
+              src={`https://videos.sproutvideo.com/embed/${selectedVideo}`}
+              width="640"
+              height="360"
               frameBorder="0"
-              allow="autoplay; fullscreen; picture-in-picture"
-              style={{
-                width: "100%",
-                height: "100%",
-              }}
-              title={`Selected Video`}
+              allowFullScreen
+              referrerPolicy="no-referrer-when-downgrade"
+              title="Video Player"
             ></iframe>
             <button className="close-button" onClick={closeModal}>
               Close
