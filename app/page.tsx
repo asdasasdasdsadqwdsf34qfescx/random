@@ -46,24 +46,20 @@ const VimeoGrid = () => {
     players.current.set(videoId, player);
 
     iframe.addEventListener("mouseenter", () => {
-      console.log("Hover started, playing video:", videoId);
       player.play();
     });
 
     iframe.addEventListener("mouseleave", () => {
-      console.log("Hover ended, pausing video:", videoId);
       player.pause();
     });
   };
 
   const openModal = (videoId: string) => {
-    console.log("Opening modal for video:", videoId);
     setSelectedVideo(videoId);
     setModalOpen(true);
   };
 
   const closeModal = () => {
-    console.log("Closing modal...");
     setModalOpen(false);
     setSelectedVideo(null);
   };
