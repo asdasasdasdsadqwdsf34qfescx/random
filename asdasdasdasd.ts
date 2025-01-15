@@ -1,1 +1,0 @@
-<iframe class='sproutvideo-player' src='https://videos.sproutvideo.com/embed/4491d7b41f19efc5cd/b3e51782f2c4b3f0' width='640' height='360' frameborder='0' allowfullscreen referrerpolicy='no-referrer-when-downgrade' title='Video Player'></iframe>
