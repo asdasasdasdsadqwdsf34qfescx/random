@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Copy Extracted Text</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+        }
+        input, button, textarea {
+            padding: 10px;
+            margin: 10px 0;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Extract and Copy Video ID</h1>
+    <label for="iframeInput">Paste the iframe code:</label><br>
+    <textarea id="iframeInput" rows="4" cols="80" placeholder="<iframe ...></iframe>"></textarea><br>
+    <button onclick="extractAndCopy()">Extract & Copy</button>
+    <p id="result" style="font-weight: bold; margin-top: 10px;"></p>
+
+    <script>
+        function extractAndCopy() {
+            const iframeInput = document.getElementById("iframeInput");
+            const match = iframeInput.value.match(/embed\/([\w\d]+\/[\w\d]+)/);
+
+            if (match) {
+                const extracted = `"${match[1]}",`;
+                navigator.clipboard.writeText(extracted)
+                    .then(() => {
+                        document.getElementById("result").textContent = `Copied: ${extracted}`;
+                        iframeInput.value = ""; // Golește câmpul după copiere
+                    })
+                    .catch(err => {
+                        document.getElementById("result").textContent = "Failed to copy: " + err;
+                    });
+            } else {
+                document.getElementById("result").textContent = "No valid video ID found.";
+                iframeInput.value = ""; // Golește câmpul chiar dacă nu este valid
+            }
+        }
+    </script>
+</body>
+</html>
