@@ -47,7 +47,7 @@ const VimeoGrid = () => {
 
       <footer className="absolute bottom-8 left-1/2 transform -translate-x-1/2 text-center">
         <p className="text-sm text-gray-400">
-         Make sex not wat ❤️
+         Make sex not war ❤️
         </p>
       </footer>
     </div>

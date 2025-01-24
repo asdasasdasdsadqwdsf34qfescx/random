@@ -7,12 +7,12 @@ const VimeoGrid = () => {
   const players = useRef(new Map()); // Ref to store player instances
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
-  const [visibleVideos, setVisibleVideos] = useState([]);
+  const [visibleVideos, setVisibleVideos] = useState<Array<string>>([]);
   const [loadCount, setLoadCount] = useState(16); // Number of videos to load at a time
 
   useEffect(() => {
-    // Initialize visible videos with the first batch
-    setVisibleVideos(videoIds.slice(0, loadCount));
+
+    setVisibleVideos((videoIds || []).slice(0, loadCount || 0));
   }, [loadCount]);
 
   useEffect(() => {
