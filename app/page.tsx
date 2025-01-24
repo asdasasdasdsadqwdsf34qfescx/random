@@ -17,8 +17,8 @@ const VimeoGrid = () => {
   };
 
   return (
-    <div style={{ height: "100vh",  }}>
-      <div style={{ position: "relative", width: "100%", paddingTop: "50%" }}>
+    <div>
+      <div>
         <iframe
           src={`https://videos.sproutvideo.com/embed/${currentVideo}?autoplay=true&controls=true`}
           frameBorder="0"
@@ -26,10 +26,9 @@ const VimeoGrid = () => {
           allowFullScreen
           style={{
             position: "absolute",
-            top: 0,
-            left: 0,
+            top: 60,
             width: "100%",
-            height: "100%",
+            height: "80%",
           }}
           title="Fullscreen Video"
         ></iframe>

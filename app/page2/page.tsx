@@ -1,14 +1,19 @@
 "use client";
 
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, SetStateAction } from "react";
 import { videoIds } from "../ids";
-
-
 
 const VimeoGrid = () => {
   const players = useRef(new Map()); // Ref to store player instances
   const [isModalOpen, setModalOpen] = useState(false);
   const [selectedVideo, setSelectedVideo] = useState(null);
+  const [visibleVideos, setVisibleVideos] = useState([]);
+  const [loadCount, setLoadCount] = useState(16); // Number of videos to load at a time
+
+  useEffect(() => {
+    // Initialize visible videos with the first batch
+    setVisibleVideos(videoIds.slice(0, loadCount));
+  }, [loadCount]);
 
   useEffect(() => {
     const script = document.createElement("script");
@@ -65,10 +70,15 @@ const VimeoGrid = () => {
     setSelectedVideo(null);
   };
 
+  const loadMoreVideos = () => {
+    const nextBatch = videoIds.slice(visibleVideos.length, visibleVideos.length + loadCount);
+    setVisibleVideos((prev) => [...prev, ...nextBatch]);
+  };
+
   return (
     <div>
       <div className="video-grid">
-        {videoIds.map((id, i) => (
+        {visibleVideos.map((id, i) => (
           <div
             className="video-container"
             key={i}
@@ -129,6 +139,13 @@ const VimeoGrid = () => {
           </div>
         ))}
       </div>
+
+      {/* Load More Button */}
+      {visibleVideos.length < videoIds.length && (
+        <button onClick={loadMoreVideos} style={{ marginTop: "20px", padding: "10px 20px", cursor: "pointer" }}>
+          Load More Videos
+        </button>
+      )}
 
       {isModalOpen && (
         <div className="modal" onClick={closeModal}>
