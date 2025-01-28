@@ -1,10 +1,9 @@
 'use client';
-const DetailsSection = ({ currentVideoDetails, showDetails, calculateAverage }) => {
+const DetailsSection = ({ currentVideoDetails, showDetails, setShowDetails, calculateAverage }) => {
   return (
     <div className="w-full bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-700">
       <div className="flex justify-between items-center mb-4">
         <h2 className="text-lg font-bold text-yellow-300">Details</h2>
-
       </div>
       {showDetails && currentVideoDetails && (
         <div className="space-y-2">
