@@ -1,16 +1,15 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useMemo, useEffect, SetStateAction } from "react";
+import { useState, useMemo, useEffect } from "react";
 import handler from "./request";
 import DetailsSection from "./Details";
 import { videoDetails } from "./ids";
 
-
 const calculateAverage = (video: any): number => {
   const numericValues = Object.values(video).filter(
     (value) => typeof value === "number"
-  ) as number[]; // Explicitly cast to number[]
+  ) as number[];
   
   return numericValues.length > 0
     ? numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length
@@ -19,27 +18,36 @@ const calculateAverage = (video: any): number => {
 
 const VimeoGrid = () => {
   const router = useRouter();
-  const [videos, setVideos] = useState(videoDetails); // Manage video state
+  const [videos, setVideos] = useState(videoDetails); // Keep all videos for ratings
+  const [onlineModels, setOnlineModels] = useState([]); // Separate state for online models
   const [currentVideo, setCurrentVideo] = useState(
     videoDetails[Math.floor(Math.random() * videoDetails.length)].id
   );
-  const [activeTab, setActiveTab] = useState("ratings"); // Manage active tab state
-  const [showDetails, setShowDetails] = useState(true); // Toggle for details section
-  const [showVideo, setShowVideo] = useState(false); // Manage video toggle state
+  const [activeTab, setActiveTab] = useState("ratings");
+  const [showDetails, setShowDetails] = useState(false);
+  const [showVideo, setShowVideo] = useState(false);
 
   // Fetch and update online status for all models
   useEffect(() => {
+    let intervalId: NodeJS.Timeout;
+
     const updateOnlineStatus = async () => {
       const updatedVideos = await Promise.all(
-        videos.map(async (video) => {
-          const isOnline = await handler(video.name); // Check if the model is online
+        videoDetails.map(async (video) => {
+          const isOnline = await handler(video.name);
           return { ...video, isOnline };
         })
       );
-      setVideos(updatedVideos);
+
+      setVideos(updatedVideos); // Keep full list for ratings
+      setOnlineModels(updatedVideos.filter((video) => video.isOnline)); // Separate online list
     };
 
     updateOnlineStatus();
+
+    intervalId = setInterval(updateOnlineStatus, 30000);
+
+    return () => clearInterval(intervalId);
   }, []);
 
   const sortedVideos = useMemo(
@@ -47,13 +55,8 @@ const VimeoGrid = () => {
     [videos]
   );
 
-  const onlineModels = useMemo(
-    () => videos.filter((video) => video.isOnline),
-    [videos]
-  );
-
   const currentVideoDetails: Record<string, any> | null =
-  videos.find((video) => video.id === currentVideo) || null;
+    videos.find((video) => video.id === currentVideo) || null;
 
   const handleRandomVideo = () => {
     const randomIndex = Math.floor(Math.random() * videos.length);
@@ -118,16 +121,14 @@ const VimeoGrid = () => {
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white">
       {/* Header */}
       <header className="flex items-center justify-between px-6 py-1 shadow-md bg-gray-700/80 backdrop-blur-lg">
-        {/* Logo Image with Link */}
         <a href="/page1">
           <img
-            src="https://static-cdn.strpst.com/panelImages/b/0/f/b0f197f48f6cc981166dcbf545ff3e0a-thumb" // Replace this with the actual path to your image
+            src="https://static-cdn.strpst.com/panelImages/b/0/f/b0f197f48f6cc981166dcbf545ff3e0a-thumb"
             alt="Logo"
             className="h-11 w-auto object-contain"
           />
         </a>
 
-        {/* Navigation Buttons */}
         <div className="flex gap-4">
           <button
             onClick={() => router.push("/page2")}
@@ -146,7 +147,6 @@ const VimeoGrid = () => {
 
       {/* Main Content */}
       <main className="flex flex-wrap justify-center gap-8 p-6 h-[calc(100vh-72px)]">
-        {/* Tab Section */}
         <section className="w-full max-w-md p-4 bg-gray-800 rounded-lg shadow-lg h-full overflow-hidden">
           {/* Tabs */}
           <div className="flex justify-between items-center mb-4 border-b border-gray-700">
@@ -185,7 +185,6 @@ const VimeoGrid = () => {
           {/* Tab Content */}
           <div className="mt-4">{renderTabContent()}</div>
         </section>
-
         {/* Video Section */}
         <section className="flex-1">
           {/* Conditionally render Chaturbate or Vimeo */}
