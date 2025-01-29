@@ -486,5 +486,20 @@ export const videoDetails = [
     content: 7,
     hair: 8,
     isOnline: false,
+  },
+  {
+    name: "kaya_davis",
+    id: "4491d7b91b11e1cacd/7eae138917fc5581",
+    brest: 7,
+    nipples: 7,
+    legs: 8,
+    ass: 8,
+    face: 9,
+    pussy: 8,
+    fullbody: 8,
+    voice: 8,
+    content: 7,
+    hair: 8,
+    isOnline: false,
   }
 ];
