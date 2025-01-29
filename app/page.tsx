@@ -217,13 +217,14 @@ const videoDetails = [
   },
 ];
 
-const calculateAverage = (video: any) => {
+const calculateAverage = (video: any): number => {
   const numericValues = Object.values(video).filter(
     (value) => typeof value === "number"
-  );
-  return (
-    numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length
-  ).toFixed(1);
+  ) as number[]; // Explicitly cast to number[]
+  
+  return numericValues.length > 0
+    ? numericValues.reduce((sum, value) => sum + value, 0) / numericValues.length
+    : 0;
 };
 
 const VimeoGrid = () => {
@@ -261,7 +262,8 @@ const VimeoGrid = () => {
     [videos]
   );
 
-  const currentVideoDetails = videos.find((video) => video.id === currentVideo);
+  const currentVideoDetails: Record<string, any> | null =
+  videos.find((video) => video.id === currentVideo) || null;
 
   const handleRandomVideo = () => {
     const randomIndex = Math.floor(Math.random() * videos.length);

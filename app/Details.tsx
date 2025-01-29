@@ -1,5 +1,18 @@
 'use client';
-const DetailsSection = ({ currentVideoDetails, showDetails, setShowDetails, calculateAverage }) => {
+
+interface DetailsSectionProps {
+  currentVideoDetails: Record<string, any> | null; // Adjust this type to match the shape of your video details
+  showDetails: boolean;
+  setShowDetails: (value: boolean) => void;
+  calculateAverage: (video: Record<string, any>) => number;
+}
+
+const DetailsSection: React.FC<DetailsSectionProps> = ({
+  currentVideoDetails,
+  showDetails,
+  setShowDetails,
+  calculateAverage,
+}) => {
   return (
     <div className="w-full bg-gray-900 rounded-xl p-4 shadow-lg border border-gray-700">
       <div className="flex justify-between items-center mb-4">
