@@ -67,7 +67,7 @@ const VimeoGrid = () => {
   // Ratings List with Styling (duplicates now filtered by id)
   const renderRatingsList = () => {
     const uniqueSortedVideos = sortedVideos.filter(
-      (video, index, self) => index === self.findIndex((v) => v.id === video.id)
+      (video, index, self) => index === self.findIndex((v) => v.name === video.name)
     );
 
     return (
