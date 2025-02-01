@@ -37,10 +37,9 @@ const VimeoGrid = () => {
             return { ...video, isOnline };
           })
         );
-        setVideos(updatedVideos);
-        setOnlineModels(
-          updatedVideos.filter((video: VideoModel) => video.isOnline)
-        );
+
+        setVideos(updatedVideos); // Full updated list
+        setOnlineModels(updatedVideos.filter((video) => video.isOnline)); // Filter online videos correctly
       } catch (error) {
         console.error("Error updating online status:", error);
       }
@@ -55,7 +54,9 @@ const VimeoGrid = () => {
     () => [...videos].sort((a, b) => calculateAverage(b) - calculateAverage(a)),
     [videos]
   );
-
+  useEffect(() => {
+    console.log("Sorted Videos updated:", sortedVideos);
+  }, [sortedVideos]);
   const currentVideoDetails: VideoModel | null =
     videos.find((video) => video.id === currentVideo) || null;
 
@@ -66,8 +67,12 @@ const VimeoGrid = () => {
 
   // Ratings List with Styling (duplicates now filtered by id)
   const renderRatingsList = () => {
+    if (!sortedVideos || sortedVideos.length === 0)
+      return <p>No videos available.</p>;
+
     const uniqueSortedVideos = sortedVideos.filter(
-      (video, index, self) => index === self.findIndex((v) => v.name === video.name)
+      (video, index, self) =>
+        video.name && index === self.findIndex((v) => v.name === video.name)
     );
 
     return (
@@ -93,18 +98,21 @@ const VimeoGrid = () => {
 
           return (
             <li
-              key={video.id}
+              key={video.id || index} // Ensure unique key even if id is missing
               className={`p-3 ${bgColor} rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out ${borderStyle}`}
-              onClick={() => setCurrentVideo(video.id)}
+              onClick={() => setCurrentVideo?.(video.id)}
             >
               <div className="flex items-center gap-2">
                 {badge && <span className="text-xl">{badge}</span>}
                 <span className={`${textColor} font-medium`}>
-                  {index + 1}. {video.name}
+                  {index + 1}. {video.name || "Unknown Video"}
                 </span>
               </div>
               <span className="text-yellow-300 font-semibold">
-                {calculateAverage(video).toFixed(1)}/10
+                {isNaN(calculateAverage(video))
+                  ? "N/A"
+                  : calculateAverage(video).toFixed(1)}
+                /10
               </span>
             </li>
           );
@@ -228,6 +236,8 @@ const VimeoGrid = () => {
               title="Vimeo Video"
             ></iframe>
           )}
+
+          {currentVideoDetails?.name}
 
           {currentVideoDetails?.isOnline && (
             <div className="mt-4 flex justify-center">

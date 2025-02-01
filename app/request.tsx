@@ -7,9 +7,7 @@ const handler = async (modelUsername: string) => {
     const model = data.find(
       (item: any) => item.username.toLowerCase() === modelUsername.toLowerCase()
     );
-  
-    console.log(modelUsername)
-    console.log(model)
+
     return model ? true : false;
   } catch (error) {
     console.error("Error checking model status:", error);

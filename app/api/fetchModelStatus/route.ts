@@ -1,4 +1,5 @@
 // app/api/fetchModelStatus/route.ts
+import next from "next";
 import { NextResponse } from "next/server";
 
 export async function GET() {
@@ -10,10 +11,6 @@ export async function GET() {
 
     return NextResponse.json(data);
   } catch (error) {
-    console.error("Error fetching data from Chaturbate API:", error);
-    return NextResponse.json(
-      { error: "Failed to fetch model status" },
-      { status: 500 }
-    );
+    
   }
 }
