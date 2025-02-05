@@ -1,45 +1,84 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useMemo, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import handler from "./request";
 import DetailsSection from "./Details";
-import { videoDetails, VideoModel } from "./ids";
+import { add, getData, VideoModel } from "./ids";
 
-const calculateAverage = (video: any): number => {
-  const numericValues = Object.values(video).filter(
-    (value) => typeof value === "number"
-  ) as number[];
-
-  return numericValues.length > 0
-    ? numericValues.reduce((sum, value) => sum + value, 0) /
-        numericValues.length
-    : 0;
+const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating"> = {
+  videoId: [],
+  name: "",
+  brest: 0,
+  nipples: 0,
+  legs: 0,
+  ass: 0,
+  face: 0,
+  pussy: 0,
+  overall: 0,
+  voice: 0,
+  content: 0,
+  eyes: 0,
+  lips: 0,
+  waist: 0,
+  wife: 0,
+  haire: 0,
+  nails: 0,
+  nose: 0,
+  skin: 0,
+  hands: 0,
+  rear: 0,
+  front: 0,
+  ears: 0,
+  height: 0,
+  weight: 0,
+  instagram: null,
+  tiktok: null,
 };
 
 const VimeoGrid = () => {
   const router = useRouter();
+  const [videoDetails, setVideoDetails] = useState<VideoModel[]>([]);
+  const [currentVideo, setCurrentVideo] = useState<VideoModel | null>(null);
+  const [activeTab, setActiveTab] = useState("ratings");
   const [videos, setVideos] = useState<VideoModel[]>([]);
   const [onlineModels, setOnlineModels] = useState<VideoModel[]>([]);
-  const [currentVideo, setCurrentVideo] = useState<string>(
-    videoDetails[Math.floor(Math.random() * videoDetails.length)].id
-  );
-  const [activeTab, setActiveTab] = useState("ratings");
+  const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
+  const [showAddModal, setShowAddModal] = useState(false);
   const [showVideo, setShowVideo] = useState(false);
+  const [newModel, setNewModel] =
+    useState<typeof defaultNewModel>(defaultNewModel);
 
-  // Fetch and update online status for all models
   useEffect(() => {
+    const fetchData = async () => {
+      try {
+        const details = await getData();
+        if (details) {
+          setVideoDetails(details);
+          const id = Math.floor(Math.random() * details.length)
+          setCurrentVideo(details[id]);
+          setSelectedVideoIndex(0)
+        }
+      } catch (error) {
+        console.error("Error fetching video data:", error);
+      }
+    };
+    fetchData();
+  }, []);
+
+  useEffect(() => {
+    if (videoDetails.length === 0) return;
+
     const updateOnlineStatus = async () => {
       try {
         const updatedVideos = await Promise.all(
-          videoDetails.map(async (video) => {
-            const isOnline = await handler(video.name);
-            return { ...video, isOnline };
-          })
+          videoDetails.map(async (video) => ({
+            ...video,
+            isOnline: await handler(video.name),
+          }))
         );
-
-        setVideos(updatedVideos); // Full updated list
-        setOnlineModels(updatedVideos.filter((video) => video.isOnline)); // Filter online videos correctly
+        setVideos(updatedVideos);
+        setOnlineModels(updatedVideos.filter((video) => video.isOnline));
       } catch (error) {
         console.error("Error updating online status:", error);
       }
@@ -48,92 +87,116 @@ const VimeoGrid = () => {
     updateOnlineStatus();
     const intervalId = setInterval(updateOnlineStatus, 30000);
     return () => clearInterval(intervalId);
-  }, []);
+  }, [videoDetails]);
 
   const sortedVideos = useMemo(
-    () => [...videos].sort((a, b) => calculateAverage(b) - calculateAverage(a)),
+    () => [...videos].sort((a, b) => b.averageRating - a.averageRating),
     [videos]
   );
-  useEffect(() => {
-    console.log("Sorted Videos updated:", sortedVideos);
-  }, [sortedVideos]);
-  const currentVideoDetails: VideoModel | null =
-    videos.find((video) => video.id === currentVideo) || null;
 
   const handleRandomVideo = () => {
-    const randomIndex = Math.floor(Math.random() * videos.length);
-    setCurrentVideo(videos[randomIndex].id);
+    if (videoDetails.length > 0) {
+      const randomModel =
+        videoDetails[Math.floor(Math.random() * videoDetails.length)];
+      setCurrentVideo(randomModel);
+      setSelectedVideoIndex(0);
+    }
   };
 
-  // Ratings List with Styling (duplicates now filtered by id)
-  const renderRatingsList = () => {
-    if (!sortedVideos || sortedVideos.length === 0)
-      return <p>No videos available.</p>;
+  const handleAddSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      const ratingFields = [
+        newModel.brest,
+        newModel.nipples,
+        newModel.legs,
+        newModel.ass,
+        newModel.face,
+        newModel.pussy,
+        newModel.overall,
+        newModel.voice,
+        newModel.content,
+        newModel.eyes,
+        newModel.lips,
+        newModel.waist,
+        newModel.wife,
+        newModel.haire,
+        newModel.nails,
+        newModel.skin,
+        newModel.hands,
+        newModel.rear,
+        newModel.front,
+        newModel.ears,
+        newModel.height,
+        newModel.weight,
+        newModel.nose,
+      ];
 
-    const uniqueSortedVideos = sortedVideos.filter(
-      (video, index, self) =>
-        video.name && index === self.findIndex((v) => v.name === video.name)
-    );
+      const averageRating =
+        ratingFields.reduce((a, b) => a + b, 0) / ratingFields.length;
 
-    return (
-      <ul className="space-y-2 overflow-auto h-96">
-        {uniqueSortedVideos.map((video, index) => {
-          let bgColor = "bg-gray-700";
-          let textColor = "text-white";
-          let borderStyle = "border border-gray-600";
-          let badge = null;
+      const modelToAdd: VideoModel = {
+        ...newModel,
+        isOnline: false,
+        averageRating,
+      };
 
-          if (index < 3) {
-            bgColor = "bg-gradient-to-r from-yellow-500 to-orange-500";
-            textColor = "text-black font-semibold";
-            borderStyle = "border border-yellow-400 shadow-md";
-            badge = index === 0 ? "❤️" : index === 1 ? "🧡" : "💛";
-          } else if (index < 6) {
-            bgColor = "bg-gradient-to-r from-blue-600 to-indigo-600";
-            borderStyle = "border border-blue-400";
-          } else if (index < 10) {
-            bgColor = "bg-gradient-to-r from-green-600 to-teal-600";
-            borderStyle = "border border-green-400";
-          }
+      add(modelToAdd);
 
-          return (
-            <li
-              key={video.id || index} // Ensure unique key even if id is missing
-              className={`p-3 ${bgColor} rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out ${borderStyle}`}
-              onClick={() => setCurrentVideo?.(video.id)}
-            >
-              <div className="flex items-center gap-2">
-                {badge && <span className="text-xl">{badge}</span>}
-                <span className={`${textColor} font-medium`}>
-                  {index + 1}. {video.name || "Unknown Video"}
-                </span>
-              </div>
-              <span className="text-yellow-300 font-semibold">
-                {isNaN(calculateAverage(video))
-                  ? "N/A"
-                  : calculateAverage(video).toFixed(1)}
-                /10
-              </span>
-            </li>
-          );
-        })}
-      </ul>
-    );
+      const details = await getData();
+      if (details) {
+        setVideoDetails(details);
+        setCurrentVideo(details[0]);
+        
+      }
+
+      setShowAddModal(false);
+      setNewModel(defaultNewModel);
+    } catch (error) {
+      console.error("Error adding model:", error);
+    }
   };
 
   const renderTabContent = () => {
     switch (activeTab) {
       case "ratings":
-        return renderRatingsList();
+        return (
+          <ul className="space-y-2 overflow-auto h-96">
+            {sortedVideos.length ? (
+              sortedVideos.map((video, index) => (
+                <li
+                  key={video.id}
+                  className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
+                  onClick={() => {
+                    setCurrentVideo(video);
+                    setSelectedVideoIndex(0);
+                  }}
+                >
+                  <span className="text-white font-medium">
+                    {index + 1}. {video.name || "Unknown Video"}
+                  </span>
+                  <span className="text-yellow-300 font-semibold">
+                    {video.averageRating.toFixed(1)}/10
+                  </span>
+                </li>
+              ))
+            ) : (
+              <p>No videos available.</p>
+            )}
+          </ul>
+        );
       case "online":
         return (
           <ul className="space-y-2 overflow-y-auto max-h-96">
-            {onlineModels.length > 0 ? (
+            {onlineModels.length ? (
               onlineModels.map((model) => (
                 <li
                   key={model.id}
                   className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:bg-gray-600"
-                  onClick={() => setCurrentVideo(model.id)}
+                  onClick={() => {
+                    setCurrentVideo(model);
+                    setSelectedVideoIndex(0);
+                  }}
                 >
                   <span className="font-medium">{model.name}</span>
                   <span className="text-green-400">Online</span>
@@ -145,12 +208,7 @@ const VimeoGrid = () => {
           </ul>
         );
       case "details":
-        return (
-          <DetailsSection
-            currentVideoDetails={currentVideoDetails}
-            calculateAverage={calculateAverage}
-          />
-        );
+        return <DetailsSection currentVideoDetails={currentVideo!} />;
       default:
         return null;
     }
@@ -158,7 +216,6 @@ const VimeoGrid = () => {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white">
-      {/* Header */}
       <header className="flex items-center justify-between px-6 py-1 shadow-md bg-gray-700/80 backdrop-blur-lg">
         <a href="/page1">
           <img
@@ -168,6 +225,12 @@ const VimeoGrid = () => {
           />
         </a>
         <div className="flex gap-4">
+          <button
+            onClick={() => setShowAddModal(true)}
+            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition"
+          >
+            Add Model
+          </button>
           <button
             onClick={() => router.push("/page2")}
             className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition"
@@ -183,44 +246,184 @@ const VimeoGrid = () => {
         </div>
       </header>
 
-      {/* Main Content */}
+      {showAddModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+          <div className="bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4 shadow-xl">
+            <h2 className="text-xl mb-4 font-bold">Add New Model</h2>
+
+            <form
+              onSubmit={handleAddSubmit}
+              className="grid grid-cols-1 md:grid-cols-2 gap-4"
+            >
+              {/* Left Column - Basic Information */}
+              <div className="space-y-3">
+                <h3 className="font-medium text-lg mb-2">Basic Information</h3>
+
+                <div className="flex flex-col">
+                  <label className="text-sm mb-1">Name *</label>
+                  <input
+                    type="text"
+                    required
+                    className="p-2 bg-gray-700 rounded-md text-sm"
+                    value={newModel.name}
+                    onChange={(e) =>
+                      setNewModel({ ...newModel, name: e.target.value })
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-sm mb-1">
+                    Video IDs (comma separated) *
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    className="p-2 bg-gray-700 rounded-md text-sm"
+                    value={newModel.videoId.join(", ")}
+                    onChange={(e) =>
+                      setNewModel({
+                        ...newModel,
+                        videoId: e.target.value
+                          .split(",")
+                          .map((id) => id.trim()),
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-sm mb-1">Instagram</label>
+                  <input
+                    type="text"
+                    className="p-2 bg-gray-700 rounded-md text-sm"
+                    value={newModel.instagram || ""}
+                    onChange={(e) =>
+                      setNewModel({
+                        ...newModel,
+                        instagram: e.target.value || null,
+                      })
+                    }
+                  />
+                </div>
+
+                <div className="flex flex-col">
+                  <label className="text-sm mb-1">TikTok</label>
+                  <input
+                    type="text"
+                    className="p-2 bg-gray-700 rounded-md text-sm"
+                    value={newModel.tiktok || ""}
+                    onChange={(e) =>
+                      setNewModel({
+                        ...newModel,
+                        tiktok: e.target.value || null,
+                      })
+                    }
+                  />
+                </div>
+              </div>
+
+              {/* Right Column - Ratings */}
+              <div className="space-y-3">
+                <h3 className="font-medium text-lg mb-2">Ratings (0-10)</h3>
+                <div className="grid grid-cols-2 gap-1">
+                  {[
+                    ["Brest", "brest"],
+                    ["Nipples", "nipples"],
+                    ["Legs", "legs"],
+                    ["Ass", "ass"],
+                    ["Face", "face"],
+                    ["Pussy", "pussy"],
+                    ["Overall", "overall"],
+                    ["Voice", "voice"],
+                    ["Content", "content"],
+                    ["Eyes", "eyes"],
+                    ["Lips", "lips"],
+                    ["Waist", "waist"],
+                    ["Wife", "wife"],
+                    ["Hair", "haire"],
+                    ["Nails", "nails"],
+                    ["Skin", "skin"],
+                    ["Hands", "hands"],
+                    ["Rear", "rear"],
+                    ["Front", "front"],
+                    ["Ears", "ears"],
+                    ["Height", "height"],
+                    ["Weight", "weight"],
+                    ["Nose", "nose"],
+                  ].map(([label, key]) => (
+                    <div key={key} className="flex flex-col">
+                      <label className="text-sm mb-1">{label}</label>
+                      <input
+                        type="number"
+                        min="0"
+                        max="10"
+                        required
+                        className="p-2 bg-gray-700 rounded-md text-sm"
+                        value={newModel[key as keyof typeof newModel]}
+                        onChange={(e) =>
+                          setNewModel({
+                            ...newModel,
+                            [key]: parseInt(e.target.value) || 0,
+                          })
+                        }
+                      />
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Buttons */}
+              <div className="md:col-span-2 mt-4 flex justify-end gap-4">
+                <button
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition text-sm"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="submit"
+                  className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition text-sm"
+                >
+                  Add Model
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
       <main className="flex flex-wrap justify-center gap-8 p-6 h-[calc(100vh-72px)]">
         <section className="w-full max-w-md p-4 bg-gray-800 rounded-lg shadow-lg h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4 border-b border-gray-700">
-            <button
-              onClick={() => setActiveTab("ratings")}
-              className="py-2 px-4 text-yellow-400 border-b-2 border-yellow-400"
-            >
-              Ratings
-            </button>
-            <button
-              onClick={() => setActiveTab("online")}
-              className="py-2 px-4 text-green-400 border-b-2 border-green-400"
-            >
-              Online Models
-            </button>
-            <button
-              onClick={() => setActiveTab("details")}
-              className="py-2 px-4 text-blue-400 border-b-2 border-blue-400"
-            >
-              Details
-            </button>
+            {["ratings", "online", "details"].map((tab) => (
+              <button
+                key={tab}
+                onClick={() => setActiveTab(tab)}
+                className={`py-2 px-4 text-white ${
+                  activeTab === tab ? "border-b-2 border-purple-500" : ""
+                }`}
+              >
+                {tab.charAt(0).toUpperCase() + tab.slice(1)}
+              </button>
+            ))}
           </div>
           <div className="mt-4">{renderTabContent()}</div>
         </section>
-        {/* Video Section */}
+
         <section className="flex-1">
-          {currentVideoDetails?.isOnline && showVideo ? (
+          {currentVideo?.isOnline && showVideo ? (
             <iframe
               id="cam-preview"
-              src={`https://chaturbate.com/embed/${currentVideoDetails.name}/?join_overlay=1&campaign=GeOP2&embed_video_only=1&disable_sound=1&tour=9oGW&mobileRedirect=never`}
+              src={`https://chaturbate.com/embed/${currentVideo.name}/?join_overlay=1&campaign=GeOP2&embed_video_only=1&disable_sound=1&tour=9oGW&mobileRedirect=never`}
               width="80%"
               height="90%"
               frameBorder="0"
               className="w-full aspect-video rounded-lg shadow-xl border border-gray-700"
               scrolling="no"
               style={{
-                backgroundImage: `url(https://thumb.live.mmcdn.com/ri/${currentVideoDetails.name}.jpg)`,
+                backgroundImage: `url(https://thumb.live.mmcdn.com/ri/${currentVideo.name}.jpg)`,
                 backgroundSize: "cover",
                 opacity: 1,
               }}
@@ -229,7 +432,7 @@ const VimeoGrid = () => {
             ></iframe>
           ) : (
             <iframe
-              src={`https://videos.sproutvideo.com/embed/${currentVideo}?autoplay=true&controls=true`}
+              src={`https://videos.sproutvideo.com/embed/${currentVideo?.videoId[selectedVideoIndex]}?autoplay=true&controls=true`}
               className="w-full h-64 md:h-96 rounded-md shadow-md"
               frameBorder="0"
               allowFullScreen
@@ -237,9 +440,11 @@ const VimeoGrid = () => {
             ></iframe>
           )}
 
-          {currentVideoDetails?.name}
+          {currentVideo?.name}
+          <p></p>
+          {currentVideo?.averageRating.toFixed(1)}
 
-          {currentVideoDetails?.isOnline && (
+          {currentVideo?.isOnline && (
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => setShowVideo(true)}
@@ -263,6 +468,24 @@ const VimeoGrid = () => {
               >
                 Switch to Vimeo
               </button>
+            </div>
+          )}
+          {/* Video Selection Buttons */}
+          {currentVideo && currentVideo.videoId.length > 1 && (
+            <div className="mt-4 flex flex-wrap justify-center gap-2">
+              {currentVideo?.videoId.map((id, index) => (
+                <button
+                  key={id}
+                  onClick={() => setSelectedVideoIndex(index)}
+                  className={`px-3 py-1 rounded-md text-white text-sm font-semibold transition ${
+                    selectedVideoIndex === index
+                      ? "bg-purple-700"
+                      : "bg-gray-700 hover:bg-gray-600"
+                  }`}
+                >
+                  Video {index + 1}
+                </button>
+              ))}
             </div>
           )}
         </section>
