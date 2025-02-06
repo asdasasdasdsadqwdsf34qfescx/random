@@ -4,7 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import handler from "./request";
 import DetailsSection from "./Details";
-import { add, getData, VideoModel } from "./ids";
+import { add, getData, update, VideoModel } from "./ids";
 
 const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating"> = {
   videoId: [],
@@ -48,16 +48,17 @@ const VimeoGrid = () => {
   const [showVideo, setShowVideo] = useState(false);
   const [newModel, setNewModel] =
     useState<typeof defaultNewModel>(defaultNewModel);
-
+  const [showEditModal, setShowEditModal] = useState(false);
+  const [editedModel, setEditedModel] = useState<VideoModel | null>(null);
   useEffect(() => {
     const fetchData = async () => {
       try {
         const details = await getData();
         if (details) {
           setVideoDetails(details);
-          const id = Math.floor(Math.random() * details.length)
+          const id = Math.floor(Math.random() * details.length);
           setCurrentVideo(details[id]);
-          setSelectedVideoIndex(0)
+          setSelectedVideoIndex(0);
         }
       } catch (error) {
         console.error("Error fetching video data:", error);
@@ -147,7 +148,6 @@ const VimeoGrid = () => {
       if (details) {
         setVideoDetails(details);
         setCurrentVideo(details[0]);
-        
       }
 
       setShowAddModal(false);
@@ -161,7 +161,7 @@ const VimeoGrid = () => {
     switch (activeTab) {
       case "ratings":
         return (
-          <ul className="space-y-2 overflow-auto h-96">
+          <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
             {sortedVideos.length ? (
               sortedVideos.map((video, index) => (
                 <li
@@ -208,7 +208,144 @@ const VimeoGrid = () => {
           </ul>
         );
       case "details":
-        return <DetailsSection currentVideoDetails={currentVideo!} />;
+        return (
+          <div>
+            <DetailsSection currentVideoDetails={currentVideo!} />
+            <button
+              onClick={() => {
+                setEditedModel(currentVideo);
+                setShowEditModal(true);
+              }}
+              className="mt-4 px-4 py-2 rounded-lg bg-yellow-500 hover:bg-yellow-400 transition"
+            >
+              Edit Model Details
+            </button>
+            {showEditModal && currentVideo && (
+              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
+                <div className="bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4 shadow-xl">
+                  <h2 className="text-xl mb-4 font-bold">Edit Model Details</h2>
+
+                  <form
+                    onSubmit={async (e) => {
+                      e.preventDefault();
+                      
+                      // Update the model
+                      await update(editedModel!);
+                    
+                      // Find and update the modified model in the current state without re-fetching all data
+                      setVideoDetails((prev) =>
+                        prev.map((video) =>
+                          video.id === editedModel?.id ? { ...video, ...editedModel } : video
+                        )
+                      );
+                    
+                      // Also update the current video if applicable
+                      if (currentVideo?.id === editedModel?.id) {
+                        setCurrentVideo({ ...currentVideo, ...editedModel });
+                      }
+                    
+                      setShowEditModal(false);
+                    }}
+                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                  >
+                    <div className="flex flex-col">
+                      <label className="text-sm mb-1">Name *</label>
+                      <input
+                        type="text"
+                        className="p-2 bg-gray-700 rounded-md text-sm"
+                        value={editedModel!.name}
+                        onChange={(e) =>
+                          setEditedModel({
+                            ...editedModel!,
+                            name: e.target.value,
+                          })
+                        }
+                      />
+                    </div>
+
+                    <div className="flex flex-col">
+                      <label className="text-sm mb-1">
+                        Video IDs (comma separated) *
+                      </label>
+                      <input
+                        type="text"
+                        className="p-2 bg-gray-700 rounded-md text-sm"
+                        value={editedModel!.videoId.join(", ")}
+                        onChange={(e) =>
+                          setEditedModel({
+                            ...editedModel!,
+                            videoId: e.target.value
+                              .split(",")
+                              .map((id) => id.trim()),
+                          })
+                        }
+                      />
+                    </div>
+
+                    {[
+                      ["Brest", "brest"],
+                      ["Nipples", "nipples"],
+                      ["Legs", "legs"],
+                      ["Ass", "ass"],
+                      ["Face", "face"],
+                      ["Pussy", "pussy"],
+                      ["Overall", "overall"],
+                      ["Voice", "voice"],
+                      ["Content", "content"],
+                      ["Eyes", "eyes"],
+                      ["Lips", "lips"],
+                      ["Waist", "waist"],
+                      ["Wife", "wife"],
+                      ["Hair", "haire"],
+                      ["Nails", "nails"],
+                      ["Skin", "skin"],
+                      ["Hands", "hands"],
+                      ["Rear", "rear"],
+                      ["Front", "front"],
+                      ["Ears", "ears"],
+                      ["Height", "height"],
+                      ["Weight", "weight"],
+                      ["Nose", "nose"],
+                    ].map(([label, key]) => (
+                      <div key={key} className="flex flex-col">
+                        <label className="text-sm mb-1">{label}</label>
+                        <input
+                          type="number"
+                          min="0"
+                          max="10"
+                          className="p-2 bg-gray-700 rounded-md text-sm"
+                          value={editedModel![key as keyof typeof editedModel]}
+                          onChange={(e) =>
+                            setEditedModel({
+                              ...editedModel!,
+                              [key]: parseInt(e.target.value) || 0,
+                            })
+                          }
+                        />
+                      </div>
+                    ))}
+
+                    <div className="md:col-span-2 mt-4 flex justify-end gap-4">
+                      <button
+                        type="button"
+                        onClick={() => setShowEditModal(false)}
+                        className="px-4 py-2 rounded-lg bg-gray-600 hover:bg-gray-500 transition text-sm"
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 transition text-sm"
+                      >
+                        Save Changes
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+            )}
+          </div>
+        );
       default:
         return null;
     }
@@ -360,7 +497,7 @@ const VimeoGrid = () => {
                         max="10"
                         required
                         className="p-2 bg-gray-700 rounded-md text-sm"
-                        value={newModel[key as keyof typeof newModel]}
+                        value={newModel[key as keyof typeof newModel]!}
                         onChange={(e) =>
                           setNewModel({
                             ...newModel,
@@ -471,7 +608,7 @@ const VimeoGrid = () => {
             </div>
           )}
           {/* Video Selection Buttons */}
-          {currentVideo && currentVideo.videoId.length > 1 && (
+          {currentVideo && currentVideo?.videoId.length > 1 && (
             <div className="mt-4 flex flex-wrap justify-center gap-2">
               {currentVideo?.videoId.map((id, index) => (
                 <button

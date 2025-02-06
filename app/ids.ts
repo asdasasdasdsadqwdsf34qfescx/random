@@ -181,95 +181,7 @@ export const videoIds = [
 ];
 
 // export const videoDetails = [
-//   name: "monica_liz",
-//   id: "1191d7b4191cedc598/4b2e1363e6b494c8",
-//   brest: 3,
-//   nipples: 7,
-//   legs: 8,
-//   ass: 10,
-//   face: 9,
-//   pussy: 8,
-//   overall: 9,
-//   voice: 7,
-//   content: 8,
-//   haire: 9,
-//   eyes: 8,
-//   lips: 9,
-//   waist: 9,
-//   wife: 7,
-//   nails: 9,
-//   nose: 9,
-//   skin: 10,
-//   hands: 9,
-//   rear: 10,
-//   front: 9,
-//   ears: 9,
-//   height: 8,
-//   weight: 9,
-//   instagram: null,
-//   tiktok: null,
-//   isOnline: false,
-// },
 // {
-//   name: "golden_bag",
-//   id: "ea91d7b41f1becca63/4495d412b5147413",
-//   brest: 3,
-//   nipples: 8,
-//   legs: 7,
-//   ass: 5,
-//   face: 9,
-//   pussy: 7,
-//   overall: 7,
-//   voice: 8,
-//   content: 7,
-//   eyes: 9,
-//   lips: 7,
-//   waist: 8,
-//   wife: 8,
-//   nails: 8,
-//   nose: 9,
-//   skin: 8,
-//   haire: 8,
-//   hands: 7,
-//   rear: 6,
-//   front: 7,
-//   ears: 8,
-//   height: 8,
-//   weight: 9,
-//   instagram: null,
-//   tiktok: null,
-//   isOnline: false,
-// },
-// {
-//   name: "pamelaryant",
-//   id: "4491d6b31815e9cecd/cb2ba90a7036daf9",
-//   brest: 8,
-//   nipples: 6,
-//   legs: 8,
-//   ass: 9,
-//   face: 10,
-//   pussy: 7,
-//   overall: 10,
-//   voice: 7,
-//   content: 8,
-//   haire: 8,
-//   eyes: 9,
-//   lips: 8,
-//   waist: 8,
-//   wife: 8,
-//   nails: 8,
-//   nose: 9,
-//   skin: 9,
-//   hands: 9,
-//   rear: 10,
-//   front: 9,
-//   ears: 8,
-//   height: 8,
-//   weight: 9,
-//   instagram: null,
-//   tiktok: null,
-//   isOnline: false,
-// },
 // {
 //   name: "mellisa_nets",
 //   id: "a791d7b91b11e0c42e/67d1f95329f6fba9",
@@ -1996,7 +1908,7 @@ export const videoIds = [
 // ];
 
 export interface VideoModel {
-  id?: string;
+  id?: number;
   videoId: string[];
   name: string;
   brest: number;
@@ -2035,6 +1947,7 @@ const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZXp5ZG9ybmxlY25pcnpyY3ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3Njc1NjgsImV4cCI6MjA1NDM0MzU2OH0.MdypDytkc-8IFTfECb1DZmBufWIrOYA3lnxOQ7WNl6A";
 
 export async function getData(): Promise<VideoModel[] | undefined> {
+  console.log("getdata")
   const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
   const { data, error } = await supabase.from("models").select();
   if (error) {
@@ -2048,6 +1961,26 @@ export async function getData(): Promise<VideoModel[] | undefined> {
  export async function add(updateData: VideoModel) {
 
   const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
-  const { data1, error } = await supabase.from("models").insert(updateData)
+  const {  error } = await supabase.from("models").insert(updateData)
   console.log(error)
 }
+
+export async function update(updateData: VideoModel) {
+  updateData.averageRating = calculateAverageRating(updateData)
+  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
+  const {  error } = await supabase.from("models").update(updateData).eq("id", updateData.id)
+  console.log(error)
+}
+
+export const calculateAverageRating = (video: VideoModel): number => {
+  const ratingFields = [
+    video.brest, video.nipples, video.legs, video.ass, video.face, 
+    video.pussy, video.overall, video.voice, video.content, video.eyes, 
+    video.lips, video.waist, video.wife, video.haire, video.nails, 
+    video.skin, video.hands, video.rear, video.front, video.nose, 
+    video.ears, video.height, video.weight
+  ];
+
+  const total = ratingFields.reduce((sum, rating) => sum + rating, 0);
+  return parseFloat((total / ratingFields.length).toFixed(1)); // Rounded to 1 decimal place
+};
