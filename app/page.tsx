@@ -2,7 +2,6 @@
 
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
-import handler from "./request";
 import DetailsSection from "./Details";
 import { add, getData, update, VideoModel } from "./ids";
 
@@ -41,7 +40,6 @@ const VimeoGrid = () => {
   const [videoDetails, setVideoDetails] = useState<VideoModel[]>([]);
   const [currentVideo, setCurrentVideo] = useState<VideoModel | null>(null);
   const [activeTab, setActiveTab] = useState("ratings");
-  const [videos, setVideos] = useState<VideoModel[]>([]);
   const [onlineModels, setOnlineModels] = useState<VideoModel[]>([]);
   const [selectedVideoIndex, setSelectedVideoIndex] = useState<number>(0);
   const [showAddModal, setShowAddModal] = useState(false);
@@ -55,45 +53,24 @@ const VimeoGrid = () => {
       try {
         const details = await getData();
         if (details) {
-          setVideoDetails(details);
+          setVideoDetails(details); 
           const id = Math.floor(Math.random() * details.length);
           setCurrentVideo(details[id]);
           setSelectedVideoIndex(0);
+  
+          const onlineModels = details.filter((video) => {
+            return video.isOnline; 
+          });
+  
+          setOnlineModels(onlineModels); 
         }
       } catch (error) {
         console.error("Error fetching video data:", error);
       }
     };
     fetchData();
-  }, []);
-
-  useEffect(() => {
-    if (videoDetails.length === 0) return;
-
-    const updateOnlineStatus = async () => {
-      try {
-        const updatedVideos = await Promise.all(
-          videoDetails.map(async (video) => ({
-            ...video,
-            isOnline: await handler(video.name),
-          }))
-        );
-        setVideos(updatedVideos);
-        setOnlineModels(updatedVideos.filter((video) => video.isOnline));
-      } catch (error) {
-        console.error("Error updating online status:", error);
-      }
-    };
-
-    updateOnlineStatus();
-    const intervalId = setInterval(updateOnlineStatus, 30000);
-    return () => clearInterval(intervalId);
-  }, [videoDetails]);
-
-  const sortedVideos = useMemo(
-    () => [...videos].sort((a, b) => b.averageRating - a.averageRating),
-    [videos]
-  );
+  }, []); 
+  
 
   const handleRandomVideo = () => {
     if (videoDetails.length > 0) {
@@ -162,8 +139,8 @@ const VimeoGrid = () => {
       case "ratings":
         return (
           <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
-            {sortedVideos.length ? (
-              sortedVideos.map((video, index) => (
+            {videoDetails.length ? (
+              videoDetails.map((video, index) => (
                 <li
                   key={video.id}
                   className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
@@ -570,8 +547,10 @@ const VimeoGrid = () => {
           ) : (
             <iframe
               src={`https://videos.sproutvideo.com/embed/${currentVideo?.videoId[selectedVideoIndex]}?autoplay=true&controls=true`}
-              className="w-full h-64 md:h-96 rounded-md shadow-md"
               frameBorder="0"
+              width="80%"
+              height="90%"
+              className="w-full aspect-video rounded-lg shadow-xl border border-gray-700"
               allowFullScreen
               title="Vimeo Video"
             ></iframe>

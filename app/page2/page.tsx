@@ -11,7 +11,6 @@ const VimeoGrid = () => {
   const [loadCount, setLoadCount] = useState(16); // Number of videos to load at a time
 
   useEffect(() => {
-
     setVisibleVideos((videoIds || []).slice(0, loadCount || 0));
   }, [loadCount]);
 
