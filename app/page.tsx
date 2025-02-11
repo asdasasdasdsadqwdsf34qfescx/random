@@ -53,24 +53,44 @@ const VimeoGrid = () => {
       try {
         const details = await getData();
         if (details) {
-          setVideoDetails(details); 
+          setVideoDetails(details);
           const id = Math.floor(Math.random() * details.length);
           setCurrentVideo(details[id]);
           setSelectedVideoIndex(0);
-  
+
           const onlineModels = details.filter((video) => {
-            return video.isOnline; 
+            return video.isOnline;
           });
-  
-          setOnlineModels(onlineModels); 
+
+          setOnlineModels(onlineModels);
         }
       } catch (error) {
         console.error("Error fetching video data:", error);
       }
     };
     fetchData();
-  }, []); 
-  
+  }, []);
+
+  useEffect(() => {
+    const fetchData = async () => {
+      console.log("update data");
+      try {
+        const details = await getData();
+        if (details) {
+          setVideoDetails(details);
+          const onlineModels = details.filter((video) => {
+            return video.isOnline;
+          });
+          setOnlineModels(onlineModels);
+        }
+      } catch (error) {
+        console.error("Error fetching video data:", error);
+      }
+    };
+    fetchData();
+    const intervalId = setInterval(fetchData, 60000);
+    return () => clearInterval(intervalId);
+  }, []);
 
   const handleRandomVideo = () => {
     if (videoDetails.length > 0) {
@@ -198,38 +218,38 @@ const VimeoGrid = () => {
               Edit Model Details
             </button>
             {showEditModal && currentVideo && (
-              <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
-                <div className="bg-gray-800 p-6 rounded-lg w-full max-w-2xl mx-4 shadow-xl">
-                  <h2 className="text-xl mb-4 font-bold">Edit Model Details</h2>
-
+              <div className="fixed inset-10 bg-black bg-opacity-20 flex items-start justify-start p-4 z-50 overflow-y-auto">
+                <div className="bg-gray-800 p-1 rounded-lg max-w-2xl mx-4">
                   <form
                     onSubmit={async (e) => {
                       e.preventDefault();
-                      
+
                       // Update the model
                       await update(editedModel!);
-                    
+
                       // Find and update the modified model in the current state without re-fetching all data
                       setVideoDetails((prev) =>
                         prev.map((video) =>
-                          video.id === editedModel?.id ? { ...video, ...editedModel } : video
+                          video.id === editedModel?.id
+                            ? { ...video, ...editedModel }
+                            : video
                         )
                       );
-                    
+
                       // Also update the current video if applicable
                       if (currentVideo?.id === editedModel?.id) {
                         setCurrentVideo({ ...currentVideo, ...editedModel });
                       }
-                    
+
                       setShowEditModal(false);
                     }}
-                    className="grid grid-cols-1 md:grid-cols-2 gap-4"
+                    className="grid grid-cols-1 md:grid-cols-2 gap-1"
                   >
                     <div className="flex flex-col">
                       <label className="text-sm mb-1">Name *</label>
                       <input
                         type="text"
-                        className="p-2 bg-gray-700 rounded-md text-sm"
+                        className="p-2 bg-gray-700 rounded-md "
                         value={editedModel!.name}
                         onChange={(e) =>
                           setEditedModel({
@@ -246,7 +266,7 @@ const VimeoGrid = () => {
                       </label>
                       <input
                         type="text"
-                        className="p-2 bg-gray-700 rounded-md text-sm"
+                        className="bg-gray-700 rounded-md text-sm"
                         value={editedModel!.videoId.join(", ")}
                         onChange={(e) =>
                           setEditedModel({
@@ -356,6 +376,17 @@ const VimeoGrid = () => {
             className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 transition"
           >
             Random Video
+          </button>
+          <button
+            onClick={() =>
+              window.open(
+                "https://check-letyzwl4x-bloodysoons-projects.vercel.app/",
+                "_blank"
+              )
+            }
+            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition"
+          >
+            Visit Site
           </button>
         </div>
       </header>

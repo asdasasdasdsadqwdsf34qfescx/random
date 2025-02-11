@@ -30,7 +30,7 @@
             const match = iframeInput.value.match(/embed\/([\w\d]+\/[\w\d]+)/);
 
             if (match) {
-                const extracted = `"${match[1]}",`;
+                const extracted = `${match[1]}`;
                 navigator.clipboard.writeText(extracted)
                     .then(() => {
                         document.getElementById("result").textContent = `Copied: ${extracted}`;
