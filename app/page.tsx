@@ -3,8 +3,19 @@
 import { useRouter } from "next/navigation";
 import { useState, useEffect, useMemo } from "react";
 import DetailsSection from "./Details";
-import { add, getData, update, VideoModel } from "./ids";
-
+import {
+  add,
+  getData,
+  updateVideoCount,
+  update,
+  VideoModel,
+  getOnlineRating,
+  getVideoRating,
+} from "./ids";
+import { fetchDataFromSupabase } from "./UseEffects/fetchData";
+import { updateOnlineList } from "./UseEffects/updateOnlineModels";
+import { ButtonsSection } from "./Sections/Buttons/Buttons";
+const cheekLink = "https://check-one-ruby.vercel.app";
 const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating"> = {
   videoId: [],
   name: "",
@@ -33,11 +44,17 @@ const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating"> = {
   weight: 0,
   instagram: null,
   tiktok: null,
+  onlineCount: 0,
+  videoCount: 0,
 };
 
 const VimeoGrid = () => {
   const router = useRouter();
   const [videoDetails, setVideoDetails] = useState<VideoModel[]>([]);
+  const [randomTop, setRandomTop] = useState<VideoModel[]>([]);
+  const [onlineTop, setOnlineTop] = useState<VideoModel[]>([]);
+  const [previousRandomTop, setPreviousRandomTop] = useState<VideoModel[]>([]);
+  const [previousOnlineTop, setPreviousOnlineTop] = useState<VideoModel[]>([]);
   const [currentVideo, setCurrentVideo] = useState<VideoModel | null>(null);
   const [activeTab, setActiveTab] = useState("ratings");
   const [onlineModels, setOnlineModels] = useState<VideoModel[]>([]);
@@ -48,56 +65,62 @@ const VimeoGrid = () => {
     useState<typeof defaultNewModel>(defaultNewModel);
   const [showEditModal, setShowEditModal] = useState(false);
   const [editedModel, setEditedModel] = useState<VideoModel | null>(null);
+
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const details = await getData();
-        if (details) {
-          setVideoDetails(details);
-          const id = Math.floor(Math.random() * details.length);
-          setCurrentVideo(details[id]);
-          setSelectedVideoIndex(0);
-
-          const onlineModels = details.filter((video) => {
-            return video.isOnline;
-          });
-
-          setOnlineModels(onlineModels);
-        }
-      } catch (error) {
-        console.error("Error fetching video data:", error);
-      }
-    };
-    fetchData();
+    fetchDataFromSupabase({
+      setVideoDetails,
+      setPreviousRandomTop,
+      setRandomTop,
+      setPreviousOnlineTop,
+      randomTop,
+      setOnlineTop,
+      setCurrentVideo,
+      setSelectedVideoIndex,
+      setOnlineModels,
+    });
   }, []);
 
   useEffect(() => {
-    const fetchData = async () => {
-      console.log("update data");
-      try {
-        const details = await getData();
-        if (details) {
-          setVideoDetails(details);
-          const onlineModels = details.filter((video) => {
-            return video.isOnline;
-          });
-          setOnlineModels(onlineModels);
-        }
-      } catch (error) {
-        console.error("Error fetching video data:", error);
-      }
-    };
-    fetchData();
-    const intervalId = setInterval(fetchData, 60000);
+    updateOnlineList(setVideoDetails, setOnlineModels);
+    const intervalId = setInterval(updateOnlineList, 60000);
     return () => clearInterval(intervalId);
   }, []);
+
+  const calculatePositionChanges = (
+    currentList: VideoModel[],
+    previousList: VideoModel[]
+  ): { id: number; change: number }[] => {
+    const positionChanges: { id: number; change: number }[] = [];
+    currentList.forEach((video, currentIndex) => {
+      const previousIndex = previousList.findIndex((v) => v.id === video.id);
+      if (previousIndex !== -1) {
+        positionChanges.push({
+          id: video.id!,
+          change: previousIndex - currentIndex, // Calculăm diferența de poziții
+        });
+      } else {
+        positionChanges.push({ id: video.id!, change: 0 }); // Dacă nu există în lista anterioară, schimbarea e 0
+      }
+    });
+    return positionChanges;
+  };
 
   const handleRandomVideo = () => {
     if (videoDetails.length > 0) {
       const randomModel =
         videoDetails[Math.floor(Math.random() * videoDetails.length)];
+
       setCurrentVideo(randomModel);
+      updateVideoCount(randomModel.id!);
       setSelectedVideoIndex(0);
+
+      const fetchData = async () => {
+        const onlineTop = await getOnlineRating();
+        const randomeTop = await getVideoRating();
+        setRandomTop(randomeTop!);
+        setOnlineTop(onlineTop!);
+      };
+      fetchData();
     }
   };
 
@@ -343,6 +366,82 @@ const VimeoGrid = () => {
             )}
           </div>
         );
+      case "random":
+        return (
+          <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
+            {randomTop.length ? (
+              randomTop.map((video, index) => {
+                const positionChange = previousRandomTop.find(
+                  (prevVideo) => prevVideo.id === video.id
+                );
+                const change = positionChange?.videoCount ?? 0;
+                return (
+                  <li
+                    key={video.id}
+                    className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
+                  >
+                    <span className="text-white font-medium">
+                      {index + 1}. {video.name || "Unknown Video"}
+                    </span>
+                    <span className="text-yellow-300 font-semibold flex items-center">
+                      {video.videoCount}
+                      {change > 0 && (
+                        <span className="text-green-500 ml-2">
+                          ↑ {Math.abs(change)}
+                        </span>
+                      )}
+                      {change < 0 && (
+                        <span className="text-red-500 ml-2">
+                          ↓ {Math.abs(change)}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })
+            ) : (
+              <p>No videos available.</p>
+            )}
+          </ul>
+        );
+      case "top":
+        return (
+          <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
+            {onlineTop.length ? (
+              onlineTop.map((video, index) => {
+                const positionChange = previousRandomTop.find(
+                  (prevVideo) => prevVideo.id === video.id
+                );
+                const change = positionChange?.onlineCount ?? 0;
+                return (
+                  <li
+                    key={video.id}
+                    className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
+                  >
+                    <span className="text-white font-medium">
+                      {index + 1}. {video.name || "Unknown Video"}
+                    </span>
+                    <span className="text-yellow-300 font-semibold flex items-center">
+                      {video.onlineCount}
+                      {change > 0 && (
+                        <span className="text-green-500 ml-2">
+                          ↑ {Math.abs(change)}
+                        </span>
+                      )}
+                      {change < 0 && (
+                        <span className="text-red-500 ml-2">
+                          ↓ {Math.abs(change)}
+                        </span>
+                      )}
+                    </span>
+                  </li>
+                );
+              })
+            ) : (
+              <p>No videos available.</p>
+            )}
+          </ul>
+        );
       default:
         return null;
     }
@@ -350,46 +449,31 @@ const VimeoGrid = () => {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white">
-      <header className="flex items-center justify-between px-6 py-1 shadow-md bg-gray-700/80 backdrop-blur-lg">
-        <a href="/page1">
-          <img
-            src="https://static-cdn.strpst.com/panelImages/b/0/f/b0f197f48f6cc981166dcbf545ff3e0a-thumb"
-            alt="Logo"
-            className="h-11 w-auto object-contain"
-          />
-        </a>
-        <div className="flex gap-4">
-          <button
-            onClick={() => setShowAddModal(true)}
-            className="px-4 py-2 rounded-lg bg-purple-600 hover:bg-purple-500 transition"
-          >
-            Add Model
-          </button>
-          <button
-            onClick={() => router.push("/page2")}
-            className="px-4 py-2 rounded-lg bg-blue-600 hover:bg-blue-500 transition"
-          >
-            Go to Page 2
-          </button>
-          <button
-            onClick={handleRandomVideo}
-            className="px-4 py-2 rounded-lg bg-green-600 hover:bg-green-500 transition"
-          >
-            Random Video
-          </button>
-          <button
-            onClick={() =>
-              window.open(
-                "https://check-letyzwl4x-bloodysoons-projects.vercel.app/",
-                "_blank"
-              )
-            }
-            className="px-4 py-2 rounded-lg bg-red-600 hover:bg-red-500 transition"
-          >
-            Visit Site
-          </button>
-        </div>
-      </header>
+    <header className="flex items-center justify-between px-6 py-1 shadow-md bg-gray-700/80 backdrop-blur-lg">
+      <a href="/page1">
+        <img
+          src="https://static-cdn.strpst.com/panelImages/b/0/f/b0f197f48f6cc981166dcbf545ff3e0a-thumb"
+          alt="Logo"
+          className="h-11 w-auto object-contain"
+        />
+      </a>
+      <div className="flex gap-4">
+        <ButtonsSection
+          setVideoDetails={setVideoDetails}
+          setPreviousRandomTop={setPreviousRandomTop}
+          setRandomTop={setRandomTop}
+          setPreviousOnlineTop={setPreviousOnlineTop}
+          randomTop={randomTop}
+          setOnlineTop={setOnlineTop}
+          setCurrentVideo={setCurrentVideo}
+          setSelectedVideoIndex={setSelectedVideoIndex}
+          setOnlineModels={setOnlineModels}
+          videoDetails={videoDetails}
+          setShowAddModal={setShowAddModal}
+          router={router}
+        />
+      </div>
+    </header>
 
       {showAddModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50 overflow-y-auto">
@@ -542,7 +626,7 @@ const VimeoGrid = () => {
       <main className="flex flex-wrap justify-center gap-8 p-6 h-[calc(100vh-72px)]">
         <section className="w-full max-w-md p-4 bg-gray-800 rounded-lg shadow-lg h-full overflow-hidden">
           <div className="flex justify-between items-center mb-4 border-b border-gray-700">
-            {["ratings", "online", "details"].map((tab) => (
+            {["ratings", "online", "details", "random", "top"].map((tab) => (
               <button
                 key={tab}
                 onClick={() => setActiveTab(tab)}
@@ -587,10 +671,6 @@ const VimeoGrid = () => {
             ></iframe>
           )}
 
-          {currentVideo?.name}
-          <p></p>
-          {currentVideo?.averageRating.toFixed(1)}
-
           {currentVideo?.isOnline && (
             <div className="mt-4 flex justify-center">
               <button
@@ -606,7 +686,7 @@ const VimeoGrid = () => {
               </button>
               <button
                 onClick={() => setShowVideo(false)}
-                className={`ml-4 px-4 py-2 rounded-md text-white text-sm font-semibold transition ${
+                className={`ml-1 px-4 py-2 rounded-md text-white text-sm font-semibold transition ${
                   !showVideo
                     ? "bg-green-700 cursor-not-allowed"
                     : "bg-green-600 hover:bg-green-500"

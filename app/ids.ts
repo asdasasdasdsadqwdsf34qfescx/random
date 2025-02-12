@@ -180,8 +180,6 @@ export const videoIds = [
   "0691d6b31d1fe4c68f/01f0854b7f2eaf45",
 ];
 
-
-
 export interface VideoModel {
   id?: number;
   videoId: string[];
@@ -205,7 +203,7 @@ export interface VideoModel {
   hands: number;
   rear: number;
   front: number;
-  nose:number;
+  nose: number;
   ears: number;
   height: number;
   weight: number;
@@ -213,6 +211,8 @@ export interface VideoModel {
   tiktok: null | string;
   isOnline: boolean;
   averageRating: number;
+  onlineCount: number;
+  videoCount: number;
 }
 
 import { Database } from "./database.types";
@@ -220,45 +220,115 @@ import { createBrowserClient } from "@supabase/ssr";
 const supabaseUrl = "https://mhezydornlecnirzrcva.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZXp5ZG9ybmxlY25pcnpyY3ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3Njc1NjgsImV4cCI6MjA1NDM0MzU2OH0.MdypDytkc-8IFTfECb1DZmBufWIrOYA3lnxOQ7WNl6A";
+const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
 
-  export async function getData(): Promise<VideoModel[] | undefined> {
-    const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
-  
-    // Fetch data sorted by averageRating in descending order
+export async function getData(): Promise<VideoModel[] | undefined> {
+  // Fetch data sorted by averageRating in descending order
+  const { data, error } = await supabase
+    .from("models")
+    .select()
+    .order("averageRating", { ascending: false }); // Change to `true` for ascending order
+
+  if (error) {
+    console.error("Error fetching data:", error);
+  } else {
+    return data;
+  }
+}
+
+export async function getOnlineRating(): Promise<VideoModel[] | undefined> {
+  try {
+    // Fetch data sorted by onlineCount (descending) and then by name (ascending)
     const { data, error } = await supabase
       .from("models")
       .select()
-      .order("averageRating", { ascending: false }); // Change to `true` for ascending order
-  
+      .order("onlineCount", { ascending: false }) // Primary sort: onlineCount descending
+      .order("name", { ascending: true }); // Secondary sort: name ascending (alphabetically)
+
     if (error) {
       console.error("Error fetching data:", error);
-    } else {
-      return data;
+      return undefined;
     }
+
+    return data;
+  } catch (error) {
+    console.error("Unexpected error:", error);
+    return undefined;
   }
-  
+}
 
- export async function add(updateData: VideoModel) {
 
-  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
-  const {  error } = await supabase.from("models").insert(updateData)
-  console.log(error)
+export async function getVideoRating(): Promise<VideoModel[] | undefined> {
+  // Fetch data sorted by averageRating in descending order
+  const { data, error } = await supabase
+    .from("models")
+    .select()
+    .order("videoCount", { ascending: false }) // Change to `true` for ascending order
+    .order("name", { ascending: true }); // Secondary sort: name ascending (alphabetically)
+
+  if (error) {
+    console.error("Error fetching data:", error);
+  } else {
+    return data;
+  }
+}
+
+export async function add(updateData: VideoModel) {
+  const { error } = await supabase.from("models").insert(updateData);
+  console.log(error);
 }
 
 export async function update(updateData: VideoModel) {
-  updateData.averageRating = calculateAverageRating(updateData)
-  const supabase = createBrowserClient<Database>(supabaseUrl, supabaseKey);
-  const {  error } = await supabase.from("models").update(updateData).eq("id", updateData.id)
-  console.log(error)
+  updateData.averageRating = calculateAverageRating(updateData);
+  const { error } = await supabase
+    .from("models")
+    .update(updateData)
+    .eq("id", updateData.id);
+  console.log(error);
+}
+
+export async function updateVideoCount(id: number) {
+  const { data: model, error } = await supabase
+    .from("models")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching model:", error);
+  }
+  await supabase
+    .from("models")
+    .update({ videoCount: model.videoCount + 1 })
+    .eq("id", model.id);
+  console.log(error);
 }
 
 export const calculateAverageRating = (video: VideoModel): number => {
   const ratingFields = [
-    video.brest, video.nipples, video.legs, video.ass, video.face, 
-    video.pussy, video.overall, video.voice, video.content, video.eyes, 
-    video.lips, video.waist, video.wife, video.haire, video.nails, 
-    video.skin, video.hands, video.rear, video.front, video.nose, 
-    video.ears, video.height, video.weight
+    video.brest,
+    video.nipples,
+    video.legs,
+    video.ass,
+    video.face,
+    video.pussy,
+    video.overall,
+    video.voice,
+    video.content,
+    video.eyes,
+    video.lips,
+    video.waist,
+    video.wife,
+    video.haire,
+    video.nails,
+    video.skin,
+    video.hands,
+    video.rear,
+    video.front,
+    video.nose,
+    video.ears,
+    video.height,
+    video.weight,
   ];
 
   const total = ratingFields.reduce((sum, rating) => sum + rating, 0);
