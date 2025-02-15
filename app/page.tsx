@@ -449,30 +449,17 @@ const VimeoGrid = () => {
 
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white">
-    <header className="flex items-center justify-between px-6 py-1 shadow-md bg-gray-700/80 backdrop-blur-lg">
-      <a href="/page1">
-        <img
-          src="https://static-cdn.strpst.com/panelImages/b/0/f/b0f197f48f6cc981166dcbf545ff3e0a-thumb"
-          alt="Logo"
-          className="h-11 w-auto object-contain"
-        />
-      </a>
-      <div className="flex gap-4">
-        <ButtonsSection
-          setVideoDetails={setVideoDetails}
-          setPreviousRandomTop={setPreviousRandomTop}
-          setRandomTop={setRandomTop}
-          setPreviousOnlineTop={setPreviousOnlineTop}
-          randomTop={randomTop}
-          setOnlineTop={setOnlineTop}
-          setCurrentVideo={setCurrentVideo}
-          setSelectedVideoIndex={setSelectedVideoIndex}
-          setOnlineModels={setOnlineModels}
-          videoDetails={videoDetails}
-          setShowAddModal={setShowAddModal}
-          router={router}
-        />
-      </div>
+      <header className="flex items-center justify-between px-6 py-2 shadow-md bg-gray-700/80 backdrop-blur-lg">
+      <a href="/page1">{/* Add your logo or header content here */}</a>
+      <ButtonsSection
+        setRandomTop={setRandomTop}
+        setOnlineTop={setOnlineTop}
+        setCurrentVideo={setCurrentVideo}
+        setSelectedVideoIndex={setSelectedVideoIndex}
+        videoDetails={videoDetails}
+        setShowAddModal={setShowAddModal}
+        router={router}
+      />
     </header>
 
       {showAddModal && (
