@@ -2,7 +2,7 @@ import { update } from "@/app/ids";
 import { VideoModel } from "@/app/types";
 import { XMarkIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { SetStateAction, useEffect, useState } from "react";
-
+//
 export const EditCurrentModel = ({
   setVideoDetails,
   setCurrentVideo,
