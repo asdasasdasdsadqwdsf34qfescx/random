@@ -10,6 +10,10 @@ const DetailsSection: React.FC<DetailsSectionProps> = ({
 
   let tempData = { ...currentVideoDetails };
 delete tempData.id;
+delete tempData.videoCount
+delete tempData.onlineCount
+delete tempData.averageRating
+
   
   
   return (

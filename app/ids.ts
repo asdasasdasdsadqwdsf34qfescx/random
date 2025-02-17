@@ -180,43 +180,9 @@ export const videoIds = [
   "0691d6b31d1fe4c68f/01f0854b7f2eaf45",
 ];
 
-export interface VideoModel {
-  id?: number;
-  videoId: string[];
-  name: string;
-  brest: number;
-  nipples: number;
-  legs: number;
-  ass: number;
-  face: number;
-  pussy: number;
-  overall: number;
-  voice: number;
-  content: number;
-  eyes: number;
-  lips: number;
-  waist: number;
-  wife: number;
-  haire: number;
-  nails: number;
-  skin: number;
-  hands: number;
-  rear: number;
-  front: number;
-  nose: number;
-  ears: number;
-  height: number;
-  weight: number;
-  instagram: null | string | undefined;
-  tiktok: null | string;
-  isOnline: boolean;
-  averageRating: number;
-  onlineCount: number;
-  videoCount: number;
-}
-
 import { Database } from "./database.types";
 import { createBrowserClient } from "@supabase/ssr";
+import { VideoModel } from "./types";
 const supabaseUrl = "https://mhezydornlecnirzrcva.supabase.co";
 const supabaseKey =
   "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1oZXp5ZG9ybmxlY25pcnpyY3ZhIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Mzg3Njc1NjgsImV4cCI6MjA1NDM0MzU2OH0.MdypDytkc-8IFTfECb1DZmBufWIrOYA3lnxOQ7WNl6A";
@@ -256,7 +222,6 @@ export async function getOnlineRating(): Promise<VideoModel[] | undefined> {
     return undefined;
   }
 }
-
 
 export async function getVideoRating(): Promise<VideoModel[] | undefined> {
   // Fetch data sorted by averageRating in descending order
@@ -303,6 +268,24 @@ export async function updateVideoCount(id: number) {
     .eq("id", model.id);
   console.log(error);
 }
+
+export async function getById(id: number) {
+  const { data: model, error } = await supabase
+    .from("models")
+    .select("*")
+    .eq("id", id)
+    .single();
+
+  if (error) {
+    console.error("Error fetching model:", error);
+  }
+  return model;
+}
+
+export async function uploadAvatar(id: number, link: string) {
+  await supabase.from("models").update({ linkAvatar: link }).eq("id", id);
+}
+
 
 export const calculateAverageRating = (video: VideoModel): number => {
   const ratingFields = [

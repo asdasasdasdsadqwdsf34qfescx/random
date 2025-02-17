@@ -1,6 +1,5 @@
-import { VideoModel } from "./ids";
 
-export const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating"> = {
+export const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating" | "links" | "avatarLink"> = {
     videoId: [],
     name: "",
     brest: 0,
@@ -30,4 +29,42 @@ export const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRatin
     tiktok: null,
     onlineCount: 0,
     videoCount: 0,
+  
   };
+
+  export interface VideoModel {
+    id?: number;
+    videoId: string[];
+    name: string;
+    brest: number;
+    nipples: number;
+    legs: number;
+    ass: number;
+    face: number;
+    pussy: number;
+    overall: number;
+    voice: number;
+    content: number;
+    eyes: number;
+    lips: number;
+    waist: number;
+    wife: number;
+    haire: number;
+    nails: number;
+    skin: number;
+    hands: number;
+    rear: number;
+    front: number;
+    nose: number;
+    ears: number;
+    height: number;
+    weight: number;
+    instagram: null | string | undefined;
+    tiktok: null | string;
+    isOnline: boolean;
+    averageRating: number;
+    onlineCount: number;
+    videoCount: number;
+    links: string[]
+    avatarLink: string | null
+  }

@@ -1,4 +1,5 @@
-import { update, VideoModel } from "@/app/ids";
+import { update } from "@/app/ids";
+import { VideoModel } from "@/app/types";
 import { XMarkIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { SetStateAction, useEffect, useState } from "react";
 
@@ -18,43 +19,43 @@ export const EditCurrentModel = ({
   setEditedModel: (value: any) => void;
   currentVideo: VideoModel | null;
   editedModel: VideoModel | null;
-})  => {
-    const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
-    const [isDragging, setIsDragging] = useState(false);
-    const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  
-    const handleMouseDown = (e: React.MouseEvent) => {
-      setIsDragging(true);
-      setDragStart({
-        x: e.clientX - modalPosition.x,
-        y: e.clientY - modalPosition.y,
+}) => {
+  const [modalPosition, setModalPosition] = useState({ x: 100, y: 100 });
+  const [isDragging, setIsDragging] = useState(false);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+
+  const handleMouseDown = (e: React.MouseEvent) => {
+    setIsDragging(true);
+    setDragStart({
+      x: e.clientX - modalPosition.x,
+      y: e.clientY - modalPosition.y,
+    });
+  };
+
+  const handleMouseMove = (e: MouseEvent) => {
+    if (isDragging) {
+      setModalPosition({
+        x: e.clientX - dragStart.x,
+        y: e.clientY - dragStart.y,
       });
+    }
+  };
+
+  const handleMouseUp = () => {
+    setIsDragging(false);
+  };
+
+  useEffect(() => {
+    if (isDragging) {
+      document.addEventListener("mousemove", handleMouseMove);
+      document.addEventListener("mouseup", handleMouseUp);
+    }
+    return () => {
+      document.removeEventListener("mousemove", handleMouseMove);
+      document.removeEventListener("mouseup", handleMouseUp);
     };
-  
-    const handleMouseMove = (e: MouseEvent) => {
-      if (isDragging) {
-        setModalPosition({
-          x: e.clientX - dragStart.x,
-          y: e.clientY - dragStart.y,
-        });
-      }
-    };
-  
-    const handleMouseUp = () => {
-      setIsDragging(false);
-    };
-  
-    useEffect(() => {
-      if (isDragging) {
-        document.addEventListener("mousemove", handleMouseMove);
-        document.addEventListener("mouseup", handleMouseUp);
-      }
-      return () => {
-        document.removeEventListener("mousemove", handleMouseMove);
-        document.removeEventListener("mouseup", handleMouseUp);
-      };
-    }, [isDragging]);
-  
+  }, [isDragging]);
+
   return (
     <div>
       <button
@@ -63,9 +64,11 @@ export const EditCurrentModel = ({
           setShowEditModal(true);
         }}
         className="px-4 py-4 text-sm rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-bold border-2 border-emerald-500/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
-        >
-        <PencilSquareIcon className="w-5 h-5" />
-        Edit Model
+      >
+        <span className="relative z-10 flex items-center gap-2">
+          <PencilSquareIcon className="w-5 h-5" />
+          Edit Model
+        </span>
       </button>
       {showEditModal && currentVideo && (
         <div
@@ -177,19 +180,24 @@ export const EditCurrentModel = ({
                   ].map(([label, key]) => (
                     <div key={key} className="space-y-1">
                       <label className="text-sm text-amber-100">{label}</label>
-                      <input
-                        type="number"
-                        min="0"
-                        max="10"
+                      <select
                         className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
                         value={editedModel![key as keyof typeof editedModel]}
                         onChange={(e) =>
                           setEditedModel({
                             ...editedModel!,
-                            [key]: parseInt(e.target.value) || 0,
+                            [key]: parseInt(e.target.value),
                           })
                         }
-                      />
+                      >
+                        {Array.from({ length: 10 }, (_, i) => i + 1).map(
+                          (value) => (
+                            <option key={value} value={value}>
+                              {value}
+                            </option>
+                          )
+                        )}
+                      </select>
                     </div>
                   ))}
                 </div>

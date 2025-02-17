@@ -64,44 +64,43 @@ export const RenderTabs = ({
             currentVideo={currentVideo}
           />
         );
-      case "random":
-        return (
-          <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
-            {randomTop.length ? (
-              randomTop.map((video, index) => {
-                const positionChange = previousRandomTop.find(
-                  (prevVideo) => prevVideo.id === video.id
-                );
-                const change = positionChange?.videoCount ?? 0;
-                return (
-                  <li
-                    key={video.id}
-                    className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
-                  >
-                    <span className="text-white font-medium">
-                      {index + 1}. {video.name || "Unknown Video"}
-                    </span>
-                    <span className="text-yellow-300 font-semibold flex items-center">
-                      {video.videoCount}
-                      {change > 0 && (
-                        <span className="text-green-500 ml-2">
-                          ↑ {Math.abs(change)}
-                        </span>
-                      )}
-                      {change < 0 && (
-                        <span className="text-red-500 ml-2">
-                          ↓ {Math.abs(change)}
-                        </span>
-                      )}
-                    </span>
-                  </li>
-                );
-              })
-            ) : (
-              <p>No videos available.</p>
-            )}
-          </ul>
-        );
+        case "random":
+          return (
+            <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">
+              {randomTop.length ? (
+                randomTop.map((video, index) => {
+                  let oldScore = 0;
+                   previousRandomTop.map(
+                    (prevVideo) => {
+                      if(prevVideo.id === video.id){
+                        oldScore = prevVideo.videoCount
+                      }
+                    }
+                  );
+                  
+                  const countChange = video.videoCount - oldScore 
+                  return (
+                    <li
+                      key={video.id}
+                      className="p-3 bg-gray-700 rounded-lg flex justify-between items-center cursor-pointer hover:scale-[1.03] transition-transform duration-300 ease-in-out border border-gray-600"
+                    >
+                      <span className="text-white font-medium">
+                        {index + 1}. {video.name || "Unknown Video"}
+                      </span>
+                      <span className="text-yellow-300 font-semibold flex items-center">
+                        {video.videoCount}
+                        {countChange > 0 && (
+                          <span className="text-green-500 ml-2">↑ {countChange}</span>
+                        )}
+                      </span>
+                    </li>
+                  );
+                })
+              ) : (
+                <p>No videos available.</p>
+              )}
+            </ul>
+          );
       case "top":
         return (
           <ul className="space-y-2 overflow-auto h-[750px] scrollbar-hide">

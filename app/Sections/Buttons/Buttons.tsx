@@ -8,11 +8,11 @@ import { useState } from "react";
 import { EditCurrentModel } from "./EditCurrentModel/EditCurrentModel";
 import { AddModelButton } from "./AddModelButton/AddModelButton";
 
-
 export const ButtonsSection = ({
   setRandomTop,
-  setNewModel,
   setOnlineTop,
+  setNewModel,
+  onlineModels,
   setCurrentVideo,
   setVideoDetails,
   setShowEditModal,
@@ -25,12 +25,13 @@ export const ButtonsSection = ({
   currentVideo,
   editedModel,
   showAddModal,
-  newModel
+  newModel,
 }: {
+  setOnlineTop: (value: any) => void;
   setRandomTop: (value: any) => void;
   setEditedModel: (value: any) => void;
   setNewModel: (value: any) => void;
-  setOnlineTop: (value: any) => void;
+  onlineModels: any;
   setVideoDetails: (value: any) => void;
   setCurrentVideo: (value: any) => void;
   setShowEditModal: (value: any) => void;
@@ -41,8 +42,8 @@ export const ButtonsSection = ({
   editedModel: VideoModel | null;
   setShowAddModal: (value: boolean) => void;
   router: any;
-  showAddModal:boolean
-  newModel: any
+  showAddModal: boolean;
+  newModel: any;
 }) => {
   const [showButtons, setShowButtons] = useState(false);
 
@@ -106,7 +107,36 @@ export const ButtonsSection = ({
 
       {/* Buttons Section */}
       {showButtons && (
-        <div className="flex flex-wrap gap-1 justify-center">
+        <div className="flex gap-2">
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-6 rounded-xl shadow-lg w-56">
+            <p className="text-sm">
+              Total models:{" "}
+              <span className="font-bold">{videoDetails.length}</span>
+            </p>
+            <p className="text-sm">
+              Total online:{" "}
+              <span className="font-bold">{onlineModels.length}</span>
+            </p>
+          </div>
+          <div className="bg-gradient-to-r from-blue-500 to-purple-600 text-white p-1 rounded-xl shadow-lg w-56">
+            <p className="text-sm">
+              Name: <span className="font-bold">{currentVideo?.name}</span>
+            </p>
+            <p className="text-sm">
+              Rate:{" "}
+              <span className="font-bold">{currentVideo?.averageRating} </span>
+              <span>  Place </span>
+              <span className="font-bold">{videoDetails.indexOf(currentVideo!) + 1}</span>
+            </p>
+            <p className="text-sm">
+              Randome:{" "}
+              <span className="font-bold">{currentVideo?.videoCount}</span>
+            </p>
+            <p className="text-sm">
+              Online:{" "}
+              <span className="font-bold">{currentVideo?.onlineCount}</span>
+            </p>
+          </div>
           <button
             onClick={() => setShowAddModal(true)}
             className="px-4 py-4 text-sm rounded-lg bg-gradient-to-br from-emerald-700 via-emerald-600 to-emerald-800 text-white font-bold border-2 border-emerald-500/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
@@ -131,33 +161,9 @@ export const ButtonsSection = ({
           </button>
 
           <button
-            onClick={() => router.push("/page2")}
-            className="px-4 py-4 text-sm rounded-lg bg-white/90 backdrop-blur-sm text-emerald-900 font-bold border-2 border-emerald-100 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative group"
-          >
-            <div className="absolute inset-0 bg-gradient-to-r from-emerald-100/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
-            <span className="relative z-10 flex items-center gap-2">
-              <svg
-                className="w-4 h-4 text-emerald-700"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth="2"
-                  d="M13 10V3L4 14h7v7l9-11h-7z"
-                />
-              </svg>
-              Go to Page 2
-            </span>
-          </button>
-
-          <button
             onClick={handleRandomVideo}
             className="px-4 py-4 text-sm rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-bold border-2 border-emerald-500/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
           >
-            <div className="absolute inset-0 bg-gradient-to-r from-white/10 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
             <span className="relative z-10 flex items-center gap-2">
               <svg
                 className="w-4 h-4 text-emerald-100"
@@ -178,31 +184,21 @@ export const ButtonsSection = ({
                   d="M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
                 />
               </svg>
-              Random Video
+              Random Model
             </span>
           </button>
-
-          <EditCurrentModel
-            showEditModal={showEditModal}
-            setVideoDetails={setVideoDetails}
-            setCurrentVideo={setCurrentVideo}
-            setShowEditModal={setShowEditModal}
-            setEditedModel={setEditedModel}
-            currentVideo={currentVideo}
-            editedModel={editedModel}
-          />
         </div>
       )}
 
-       {showAddModal && (
-              <AddModelButton
-                setVideoDetails={setVideoDetails}
-                setCurrentVideo={setCurrentVideo}
-                setShowAddModal={setShowAddModal}
-                setNewModel={setNewModel}
-                newModel={newModel}
-              />
-            )}
+      {showAddModal && (
+        <AddModelButton
+          setVideoDetails={setVideoDetails}
+          setCurrentVideo={setCurrentVideo}
+          setShowAddModal={setShowAddModal}
+          setNewModel={setNewModel}
+          newModel={newModel}
+        />
+      )}
     </div>
   );
 };

@@ -59,7 +59,7 @@ export const RatingTab = ({
               className={className}
               onClick={() => {
                 setCurrentVideo(video)
-                setSelectedVideoIndex(index)
+                setSelectedVideoIndex(0)
               }}
             >
               <div className="flex items-center gap-3">

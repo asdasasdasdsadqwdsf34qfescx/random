@@ -1,24 +1,14 @@
 "use client";
 
 import { useRouter } from "next/navigation";
-import { useState, useEffect, useMemo } from "react";
-import DetailsSection from "./Details";
-import {
-  add,
-  getData,
-  updateVideoCount,
-  update,
-  VideoModel,
-  getOnlineRating,
-  getVideoRating,
-} from "./ids";
+import { useState, useEffect } from "react";
+
 import { fetchDataFromSupabase } from "./UseEffects/fetchData";
 import { updateOnlineList } from "./UseEffects/updateOnlineModels";
 import { ButtonsSection } from "./Sections/Buttons/Buttons";
-import { AddModelButton } from "./Sections/Buttons/AddModelButton/AddModelButton";
-import { defaultNewModel } from "./types";
+import { defaultNewModel, VideoModel } from "./types";
 import { RenderTabs } from "./Sections/Tabs/RenderTabs";
-const cheekLink = "https://check-one-ruby.vercel.app";
+import { EditCurrentModel } from "./Sections/Buttons/EditCurrentModel/EditCurrentModel";
 
 const VimeoGrid = () => {
   const router = useRouter();
@@ -58,32 +48,14 @@ const VimeoGrid = () => {
     return () => clearInterval(intervalId);
   }, []);
 
-  const calculatePositionChanges = (
-    currentList: VideoModel[],
-    previousList: VideoModel[]
-  ): { id: number; change: number }[] => {
-    const positionChanges: { id: number; change: number }[] = [];
-    currentList.forEach((video, currentIndex) => {
-      const previousIndex = previousList.findIndex((v) => v.id === video.id);
-      if (previousIndex !== -1) {
-        positionChanges.push({
-          id: video.id!,
-          change: previousIndex - currentIndex, // Calculăm diferența de poziții
-        });
-      } else {
-        positionChanges.push({ id: video.id!, change: 0 }); // Dacă nu există în lista anterioară, schimbarea e 0
-      }
-    });
-    return positionChanges;
-  };
-
   return (
     <div className="h-screen overflow-hidden bg-gradient-to-br from-gray-800 to-gray-900 text-white">
-      <header className="flex items-center justify-between px-1 py-2 shadow-md bg-gray-700/80 backdrop-blur-lg">
+      <header className="flex items-center justify-between px-1 py-2 shadow-md bg-gray-700/80">
         <a href="/page1">{/* Add your logo or header content here */}</a>
         <ButtonsSection
-          setRandomTop={setRandomTop}
           setOnlineTop={setOnlineTop}
+          setRandomTop={setRandomTop}
+          onlineModels={onlineModels}
           setCurrentVideo={setCurrentVideo}
           setSelectedVideoIndex={setSelectedVideoIndex}
           videoDetails={videoDetails}
@@ -100,7 +72,6 @@ const VimeoGrid = () => {
           showAddModal={showAddModal}
         />
       </header>
-
 
       <main className="flex flex-wrap justify-center gap-8 p-6 h-[calc(100vh-72px)]">
         <RenderTabs
@@ -122,7 +93,6 @@ const VimeoGrid = () => {
           previousRandomTop={previousRandomTop}
           onlineTop={onlineTop}
         />
-
         <section className="flex-1">
           {currentVideo?.isOnline && showVideo ? (
             <iframe
@@ -152,8 +122,28 @@ const VimeoGrid = () => {
               title="Vimeo Video"
             ></iframe>
           )}
+          <div className="p-2 flex gap-4">
+            <EditCurrentModel
+              showEditModal={showEditModal}
+              setVideoDetails={setVideoDetails}
+              setCurrentVideo={setCurrentVideo}
+              setShowEditModal={setShowEditModal}
+              setEditedModel={setEditedModel}
+              currentVideo={currentVideo}
+              editedModel={editedModel}
+            />
+            {currentVideo && (
+              <a
+                href={`/profile/${currentVideo.name}?id=${currentVideo.id}`}
+                target="_blank" // Deschide într-un tab nou
+                rel="noopener noreferrer" // Recomandat pentru securitate
+                className="px-4 py-4 text-sm rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-bold border-2 border-emerald-500/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
+              >
+                Profile
+              </a>
+            )}
 
-          {currentVideo?.isOnline && (
+{currentVideo?.isOnline && (
             <div className="mt-4 flex justify-center">
               <button
                 onClick={() => setShowVideo(true)}
@@ -197,6 +187,8 @@ const VimeoGrid = () => {
               ))}
             </div>
           )}
+          </div>
+
         </section>
       </main>
     </div>

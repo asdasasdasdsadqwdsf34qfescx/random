@@ -1,5 +1,5 @@
-import { add, getData, VideoModel } from "@/app/ids";
-import { defaultNewModel } from "@/app/types";
+import { add, getData } from "@/app/ids";
+import { defaultNewModel, VideoModel } from "@/app/types";
 
 export const AddModelButton = ({
   setVideoDetails,
