@@ -2,11 +2,11 @@ import {
   getOnlineRating,
   getVideoRating,
   updateVideoCount,
-  VideoModel,
 } from "@/app/ids";
 import { useState } from "react";
 import { EditCurrentModel } from "./EditCurrentModel/EditCurrentModel";
 import { AddModelButton } from "./AddModelButton/AddModelButton";
+import { VideoModel } from "@/app/types";
 
 export const ButtonsSection = ({
   setRandomTop,
