@@ -1,6 +1,5 @@
-import {
-  VideoModel,
-} from "@/app/ids";
+import { VideoModel } from "@/app/types";
+
 
 export const OnlineTab = ({
   setCurrentVideo,

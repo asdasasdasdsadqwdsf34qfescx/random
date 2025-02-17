@@ -1,5 +1,5 @@
 import DetailsSection from "@/app/Details";
-import {  VideoModel } from "@/app/ids";
+import { VideoModel } from "@/app/types";
 
 export const DetailTab = ({
   currentVideo,

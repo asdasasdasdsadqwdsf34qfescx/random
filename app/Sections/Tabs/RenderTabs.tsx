@@ -1,9 +1,9 @@
 import DetailsSection from "@/app/Details";
-import { update, VideoModel } from "@/app/ids";
 import { SetStateAction } from "react";
 import { RatingTab } from "./Rating/RatingTab";
 import { OnlineTab } from "./Online/OnlineTab";
 import { DetailTab } from "./Details/DetailTab";
+import { VideoModel } from "@/app/types";
 
 export const RenderTabs = ({
   setVideoDetails,
