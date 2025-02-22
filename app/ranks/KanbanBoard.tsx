@@ -95,12 +95,26 @@ export const KanbanBoard = ({ rankingKey }: KanbanBoardProps) => {
                         ref={provided.innerRef}
                         {...provided.draggableProps}
                         {...provided.dragHandleProps}
-                        className={`select-none px-6 py-4 mb-3 rounded-xl border border-white/10 transition transform duration-300 ease-out cursor-grab ${
-                          snapshot.isDragging
-                            ? "shadow-xl scale-105 rotate-2"
-                            : "shadow-sm scale-100"
-                        }`}
-                        style={{ background: getRankColor(rank) }}
+                        style={{
+                          userSelect: "none",
+                          padding: "1px 24px",
+                          marginBottom: 12,
+                          background: getRankColor(rank),
+                          borderRadius: "12px",
+                          color: "#000000",
+                          fontSize: "14px",
+                          fontWeight: 600,
+                          boxShadow: snapshot.isDragging
+                            ? "0 8px 24px rgba(0, 0, 0, 0.3)"
+                            : "0 4px 12px rgba(0, 0, 0, 0.1)",
+                          transform: snapshot.isDragging
+                            ? "scale(1.02) rotate(2deg)"
+                            : "scale(1)",
+                          transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                          cursor: "grab",
+                          border: "1px solid rgba(255, 255, 255, 0.1)",
+                          ...provided.draggableProps.style,
+                        }}
                       >
                         <div className="flex justify-between items-center">
                           <div>

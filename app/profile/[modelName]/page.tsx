@@ -4,7 +4,13 @@ import { getById, update } from "@/app/ids";
 import { VideoModel } from "@/app/types";
 import { useParams, useSearchParams } from "next/navigation";
 import { useState, useEffect } from "react";
-import { FiInstagram, FiVideo, FiStar, FiUsers, FiTrash2 } from "react-icons/fi";
+import {
+  FiInstagram,
+  FiVideo,
+  FiStar,
+  FiUsers,
+  FiTrash2,
+} from "react-icons/fi";
 
 const Skeleton = ({ className }: { className: string }) => (
   <div className={`animate-pulse bg-gray-700 ${className}`} />
@@ -99,10 +105,14 @@ const ModelProfile = () => {
           {/* Profile Info */}
           <div className="flex-1 space-y-6">
             <div className="flex items-center gap-4">
-              <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-400">{modelName}</h1>
+              <h1 className="text-5xl font-bold bg-gradient-to-r from-pink-400">
+                {modelName}
+              </h1>
               <span
                 className={`px-3 py-1 rounded-full text-sm ${
-                  currentModel.isOnline ? "bg-green-500/20 text-green-400" : "bg-gray-500/20"
+                  currentModel.isOnline
+                    ? "bg-green-500/20 text-green-400"
+                    : "bg-gray-500/20"
                 }`}
               >
                 {currentModel.isOnline ? "Online" : "Offline"}
@@ -115,7 +125,9 @@ const ModelProfile = () => {
                 <div className="flex items-center gap-2">
                   <FiStar className="w-6 h-6 text-yellow-400" />
                   <div>
-                    <p className="text-2xl font-bold">{currentModel.averageRating}</p>
+                    <p className="text-2xl font-bold">
+                      {currentModel.averageRating}
+                    </p>
                     <p className="text-sm text-white/60">Rating</p>
                   </div>
                 </div>
@@ -124,7 +136,9 @@ const ModelProfile = () => {
                 <div className="flex items-center gap-2">
                   <FiUsers className="w-6 h-6 text-blue-400" />
                   <div>
-                    <p className="text-2xl font-bold">{currentModel.onlineCount}</p>
+                    <p className="text-2xl font-bold">
+                      {currentModel.onlineCount}
+                    </p>
                     <p className="text-sm text-white/60">Online count</p>
                   </div>
                 </div>
@@ -133,7 +147,9 @@ const ModelProfile = () => {
                 <div className="flex items-center gap-2">
                   <FiVideo className="w-6 h-6 text-blue-400" />
                   <div>
-                    <p className="text-2xl font-bold">{currentModel.videoCount}</p>
+                    <p className="text-2xl font-bold">
+                      {currentModel.videoCount}
+                    </p>
                     <p className="text-sm text-white/60">Random count</p>
                   </div>
                 </div>
@@ -141,7 +157,15 @@ const ModelProfile = () => {
             </div>
           </div>
         </div>
-     
+        <div >
+          <iframe
+            src="https://erothots.co/embed/video/paypukle"
+            scrolling="no"
+            width="435"
+            height="400"
+          allow="autoplay"
+          ></iframe>
+        </div>
         {/* Video Management */}
         <div className="space-y-6">
           <h2 className="rounded-xl text-3xl font-bold bg-clip-text bg-gradient-to-r from-blue-400">

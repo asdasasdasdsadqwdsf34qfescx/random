@@ -1,29 +1,30 @@
 import { VideoModel } from "@/app/types";
 
-
-export const OnlineTab = ({
-  setCurrentVideo,
-  setSelectedVideoIndex,
-  onlineModels,
-}: {
+interface OnlineTabProps {
   setCurrentVideo: (value: any) => void;
   setSelectedVideoIndex: (value: any) => void;
   onlineModels: VideoModel[];
+}
+
+export const OnlineTab: React.FC<OnlineTabProps> = ({
+  setCurrentVideo,
+  setSelectedVideoIndex,
+  onlineModels,
 }) => {
   return (
-    <ul className="scrollbar-hide space-y-4 overflow-y-auto h-[750px] p-4 bg-gradient-to-b from-gray-800 to-black rounded-xl shadow-2xl border border-gray-700">
+    <ul className="scrollbar-hide max-h-[calc(100vh-200px)] space-y-4 overflow-y-auto p-6 bg-gradient-to-br from-gray-800 via-gray-900 to-black rounded-xl shadow-2xl border border-[#D4AF37]">
       {onlineModels.length ? (
         onlineModels.map((model) => (
           <li
             key={model.id}
-            className="p-4 bg-gray-800 rounded-lg flex justify-between items-center cursor-pointer transition-transform duration-300 hover:scale-105 hover:bg-gray-700 shadow-lg hover:shadow-xl border border-gray-600"
+            className="p-5 bg-gray-800 rounded-xl flex justify-between items-center cursor-pointer transition-all duration-300 transform hover:scale-105 hover:bg-gray-700 shadow-lg hover:shadow-2xl border border-gray-600 hover:border-[#D4AF37]"
             onClick={() => {
               setCurrentVideo(model);
               setSelectedVideoIndex(0);
             }}
           >
-            <span className="font-semibold text-lg text-white">{model.name}</span>
-            <span className="text-green-400 font-medium text-sm bg-green-800 bg-opacity-20 px-3 py-1 rounded-full shadow-inner">
+            <span className="font-bold text-xl text-white">{model.name}</span>
+            <span className="text-green-400 font-medium text-sm bg-green-800 bg-opacity-20 px-4 py-1 rounded-full shadow-inner">
               Online
             </span>
           </li>

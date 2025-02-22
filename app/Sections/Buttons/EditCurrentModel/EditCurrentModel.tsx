@@ -2,7 +2,7 @@ import { update } from "@/app/ids";
 import { VideoModel } from "@/app/types";
 import { XMarkIcon, PencilSquareIcon } from "@heroicons/react/24/outline";
 import { SetStateAction, useEffect, useState } from "react";
-//
+
 export const EditCurrentModel = ({
   setVideoDetails,
   setCurrentVideo,
@@ -56,6 +56,10 @@ export const EditCurrentModel = ({
     };
   }, [isDragging]);
 
+  // Clasă uniformă pentru toate butoanele
+  const buttonClass =
+    "px-3 py-1 rounded-full bg-gray-800 text-white text-sm font-bold shadow-lg hover:bg-gray-700 transition transform hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed";
+
   return (
     <div>
       <button
@@ -63,10 +67,9 @@ export const EditCurrentModel = ({
           setEditedModel(currentVideo);
           setShowEditModal(true);
         }}
-        className="px-4 py-4 text-sm rounded-lg bg-gradient-to-br from-emerald-600 to-emerald-700 text-white font-bold border-2 border-emerald-500/30 shadow-md hover:shadow-lg hover:-translate-y-0.5 transition-all duration-300 relative overflow-hidden group"
+        className={buttonClass}
       >
-        <span className="relative z-10 flex items-center gap-2">
-          <PencilSquareIcon className="w-5 h-5" />
+        <span className="flex items-center gap-2">
           Edit Model
         </span>
       </button>
@@ -91,7 +94,6 @@ export const EditCurrentModel = ({
                 onClick={() => setShowEditModal(false)}
                 className="p-1 hover:bg-gray-700 rounded-full transition-colors"
               >
-                <XMarkIcon className="w-6 h-6 text-gray-400" />
               </button>
             </div>
 
@@ -225,24 +227,25 @@ export const EditCurrentModel = ({
                     ["Poportions", "poportions"],
                     ["Generalimpression", "generalimpression"],
                     ["Buttshape", "buttshape"],
-
-                  ].map(([label, key]) => (
+                  ].map(([label]) => (
                     <div key={label}>
-                    <label className="block text-sm text-amber-100">{label}</label>
-                    <input
-                      type="number"
-                      min="1"
-                      max="1000"
-                      className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
-                      value={editedModel![label.toLowerCase() as keyof typeof editedModel]}
-                      onChange={(e) =>
-                        setEditedModel({
-                          ...editedModel!,
-                          [label.toLowerCase()]: parseInt(e.target.value),
-                        })
-                      }
-                    />
-                  </div>
+                      <label className="block text-sm text-amber-100">
+                        {label}
+                      </label>
+                      <input
+                        type="number"
+                        min="1"
+                        max="1000"
+                        className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
+                        value={editedModel![label.toLowerCase() as keyof typeof editedModel]}
+                        onChange={(e) =>
+                          setEditedModel({
+                            ...editedModel!,
+                            [label.toLowerCase()]: parseInt(e.target.value),
+                          })
+                        }
+                      />
+                    </div>
                   ))}
                 </div>
               </div>
