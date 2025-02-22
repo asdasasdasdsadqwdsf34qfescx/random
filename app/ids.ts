@@ -244,7 +244,6 @@ export async function add(updateData: VideoModel) {
 }
 
 export async function update(updateData: VideoModel) {
-  updateData.averageRating = calculateAverageRating(updateData);
   const { error } = await supabase
     .from("models")
     .update(updateData)
@@ -270,18 +269,7 @@ export async function updateVideoCount(id: number) {
 }
 
 export async function updateRank(models: VideoModel[]) {
-  // Step 1: Clear data in specific columns (e.g., 'col2' and 'col3')
-  // This will set the values of these columns to null for all rows.
-  const { error: clearError } = await supabase
-    .from("models")
-    .update({ ass: null, brest: null, face: null, height: null, wife: null  })
-    .neq("id", 2000);
-  
-  if (clearError) {
-    console.error("Error clearing specific columns:", clearError);
-    console.log(clearError)
-    return;
-  }
+
 
   // Step 2: Upsert new data into the table
   const { error: upsertError } = await supabase

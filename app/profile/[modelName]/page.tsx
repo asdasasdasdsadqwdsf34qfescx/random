@@ -157,15 +157,7 @@ const ModelProfile = () => {
             </div>
           </div>
         </div>
-        <div >
-          <iframe
-            src="https://erothots.co/embed/video/paypukle"
-            scrolling="no"
-            width="435"
-            height="400"
-          allow="autoplay"
-          ></iframe>
-        </div>
+
         {/* Video Management */}
         <div className="space-y-6">
           <h2 className="rounded-xl text-3xl font-bold bg-clip-text bg-gradient-to-r from-blue-400">
