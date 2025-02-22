@@ -69,8 +69,8 @@ export const RatingTab = ({
                 </span>
               </div>
               <span className={`${ratingColor} font-bold text-lg`}>
-                {video.averageRating.toFixed(1)}
-                <span className="text-sm ml-1 opacity-75">/10</span>
+                {video.averageRating.toFixed()}
+                <span className="text-sm ml-1 opacity-75"></span>
               </span>
             </li>
           )

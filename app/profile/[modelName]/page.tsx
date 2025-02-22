@@ -141,7 +141,7 @@ const ModelProfile = () => {
             </div>
           </div>
         </div>
-
+     
         {/* Video Management */}
         <div className="space-y-6">
           <h2 className="rounded-xl text-3xl font-bold bg-clip-text bg-gradient-to-r from-blue-400">

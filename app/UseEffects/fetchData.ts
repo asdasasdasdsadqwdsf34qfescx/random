@@ -19,7 +19,6 @@ export const fetchDataFromSupabase = async ({
 }) => {
   try {
     const details = await getData();
-    console.log(details);
     if (details) {
       setVideoDetails(details);
 

@@ -26,12 +26,12 @@ delete tempData.averageRating
               <div key={key} className="flex flex-col">
                 <div className="flex justify-between items-center text-gray-300 text-xs">
                   <span className="capitalize font-medium">{key}:</span>
-                  <span className="text-yellow-400">{value}/10</span>
+                  <span className="text-yellow-400">{value} </span>
                 </div>
                 <div className="relative w-full h-1 bg-gray-700 rounded-md overflow-hidden">
                   <div
                     className="absolute h-full bg-yellow-500"
-                    style={{ width: `${value * 10}%` }}
+                    style={{ width: `${value * 0.1}%` }}
                   ></div>
                 </div>
               </div>

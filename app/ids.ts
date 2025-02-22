@@ -269,6 +269,33 @@ export async function updateVideoCount(id: number) {
   console.log(error);
 }
 
+export async function updateRank(models: VideoModel[]) {
+  // Step 1: Clear data in specific columns (e.g., 'col2' and 'col3')
+  // This will set the values of these columns to null for all rows.
+  const { error: clearError } = await supabase
+    .from("models")
+    .update({ ass: null, brest: null, face: null, height: null, wife: null  })
+    .neq("id", 2000);
+  
+  if (clearError) {
+    console.error("Error clearing specific columns:", clearError);
+    console.log(clearError)
+    return;
+  }
+
+  // Step 2: Upsert new data into the table
+  const { error: upsertError } = await supabase
+    .from("models")
+    .upsert(models, { onConflict: "id" });
+  
+  if (upsertError) {
+    console.error("Error during upsert:", upsertError);
+  } else {
+    console.log("Data upserted successfully.");
+  }
+}
+
+
 export async function getById(id: number) {
   const { data: model, error } = await supabase
     .from("models")
@@ -285,7 +312,6 @@ export async function getById(id: number) {
 export async function uploadAvatar(id: number, link: string) {
   await supabase.from("models").update({ linkAvatar: link }).eq("id", id);
 }
-
 
 export const calculateAverageRating = (video: VideoModel): number => {
   const ratingFields = [
@@ -317,4 +343,3 @@ export const calculateAverageRating = (video: VideoModel): number => {
   const total = ratingFields.reduce((sum, rating) => sum + rating, 0);
   return parseFloat((total / ratingFields.length).toFixed(1)); // Rounded to 1 decimal place
 };
-

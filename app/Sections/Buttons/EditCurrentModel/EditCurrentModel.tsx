@@ -134,6 +134,40 @@ export const EditCurrentModel = ({
 
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-amber-100">
+                      Instagram 
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition"
+                      value={editedModel!.instagram ?? ""}
+                      onChange={(e) =>
+                        setEditedModel({
+                          ...editedModel!,
+                          instagram: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-amber-100">
+                      Tik Tok 
+                    </label>
+                    <input
+                      type="text"
+                      className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition"
+                      value={editedModel!.tiktok ?? ""}
+                      onChange={(e) =>
+                        setEditedModel({
+                          ...editedModel!,
+                          tiktok: e.target.value,
+                        })
+                      }
+                    />
+                  </div>
+
+                  <div className="space-y-2">
+                    <label className="block text-sm font-medium text-amber-100">
                       Video IDs (comma separated) *
                     </label>
                     <input
@@ -167,7 +201,7 @@ export const EditCurrentModel = ({
                     ["Lips", "lips"],
                     ["Waist", "waist"],
                     ["Wife", "wife"],
-                    ["Hair", "haire"],
+                    ["Haire", "haire"],
                     ["Nails", "nails"],
                     ["Skin", "skin"],
                     ["Hands", "hands"],
@@ -177,28 +211,38 @@ export const EditCurrentModel = ({
                     ["Height", "height"],
                     ["Weight", "weight"],
                     ["Nose", "nose"],
+                    ["Cheeks", "cheeks"],
+                    ["Thighs", "thighs"],
+                    ["Stomach", "stomach"],
+                    ["Eyebrows", "eyebrows"],
+                    ["Neck", "neck"],
+                    ["Collarbone", "collarbone"],
+                    ["Shoulders", "shoulders"],
+                    ["Posture", "posture"],
+                    ["Back", "back"],
+                    ["Forearms", "forearms"],
+                    ["Style", "style"],
+                    ["Poportions", "poportions"],
+                    ["Generalimpression", "generalimpression"],
+                    ["Buttshape", "buttshape"],
+
                   ].map(([label, key]) => (
-                    <div key={key} className="space-y-1">
-                      <label className="text-sm text-amber-100">{label}</label>
-                      <select
-                        className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
-                        value={editedModel![key as keyof typeof editedModel]}
-                        onChange={(e) =>
-                          setEditedModel({
-                            ...editedModel!,
-                            [key]: parseInt(e.target.value),
-                          })
-                        }
-                      >
-                        {Array.from({ length: 10 }, (_, i) => i + 1).map(
-                          (value) => (
-                            <option key={value} value={value}>
-                              {value}
-                            </option>
-                          )
-                        )}
-                      </select>
-                    </div>
+                    <div key={label}>
+                    <label className="block text-sm text-amber-100">{label}</label>
+                    <input
+                      type="number"
+                      min="1"
+                      max="1000"
+                      className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
+                      value={editedModel![label.toLowerCase() as keyof typeof editedModel]}
+                      onChange={(e) =>
+                        setEditedModel({
+                          ...editedModel!,
+                          [label.toLowerCase()]: parseInt(e.target.value),
+                        })
+                      }
+                    />
+                  </div>
                   ))}
                 </div>
               </div>
