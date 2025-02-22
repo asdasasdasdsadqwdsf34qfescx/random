@@ -42,17 +42,30 @@ const KanbanBoard = ({ rankingKey, onBack }: { rankingKey: keyof VideoModel, onB
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
-    
+  
     const sourceCategory = result.source.droppableId;
     const destCategory = result.destination.droppableId;
-    
+  
+    // Dacă nu s-a schimbat categoria, ieșim
+    if (sourceCategory === destCategory) return;
+  
+    // Clonăm datele pentru actualizare
     const newCategorizedModels = { ...categorizedModels };
     const movedItem = newCategorizedModels[sourceCategory].splice(result.source.index, 1)[0];
+  
+    // Setăm noua valoare a rankingKey
+    const newPts = CATEGORIES.find((c) => c.name === destCategory)?.pts ?? 10;
+    movedItem[rankingKey] = newPts;
+  
+    // Adăugăm itemul în noua categorie
     newCategorizedModels[destCategory].splice(result.destination.index, 0, movedItem);
-    
+  
+    // Actualizăm state-ul local
     setCategorizedModels(newCategorizedModels);
+    setModels(Object.values(newCategorizedModels).flat());
     console.log(Object.values(newCategorizedModels).flat())
-    // await updateRank(Object.values(newCategorizedModels).flat());
+    // Actualizăm backend-ul
+    await updateRank(Object.values(newCategorizedModels).flat());
   };
 
   return (
