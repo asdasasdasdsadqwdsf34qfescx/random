@@ -16,6 +16,8 @@ const CATEGORIES = [
   { name: "Novice 🌟", pts: 10 },
 ];
 
+const RANKING_KEYS: (keyof VideoModel)[] = ["brest", "ass", "face", "wife", "height"];
+
 const categorizeModels = (models: VideoModel[], rankingKey: keyof VideoModel) => {
   return CATEGORIES.reduce((acc, category) => {
     acc[category.name] = models.filter(
@@ -23,11 +25,12 @@ const categorizeModels = (models: VideoModel[], rankingKey: keyof VideoModel) =>
     );
     return acc;
   }, {} as Record<string, VideoModel[]>);
-}
+};
 
-const KanbanBoard = ({ rankingKey, onBack }: { rankingKey: keyof VideoModel, onBack: () => void }) => {
+const CategoryKanban = () => {
   const [models, setModels] = useState<VideoModel[]>([]);
   const [categorizedModels, setCategorizedModels] = useState<Record<string, VideoModel[]>>({});
+  const [rankingKey, setRankingKey] = useState<keyof VideoModel>("brest");
 
   useEffect(() => {
     async function fetchData() {
@@ -42,90 +45,84 @@ const KanbanBoard = ({ rankingKey, onBack }: { rankingKey: keyof VideoModel, onB
 
   const handleDragEnd = async (result: any) => {
     if (!result.destination) return;
-  
+
     const sourceCategory = result.source.droppableId;
     const destCategory = result.destination.droppableId;
-  
-    // Dacă nu s-a schimbat categoria, ieșim
+
     if (sourceCategory === destCategory) return;
-  
-    // Clonăm datele pentru actualizare
+
     const newCategorizedModels = { ...categorizedModels };
     const movedItem = newCategorizedModels[sourceCategory].splice(result.source.index, 1)[0];
-  
-    // Setăm noua valoare a rankingKey
+
     const newPts = CATEGORIES.find((c) => c.name === destCategory)?.pts ?? 10;
-    movedItem[rankingKey] = newPts;
-  
-    // Adăugăm itemul în noua categorie
+    (movedItem as any)[rankingKey] = newPts;
     newCategorizedModels[destCategory].splice(result.destination.index, 0, movedItem);
-  
-    // Actualizăm state-ul local
+
     setCategorizedModels(newCategorizedModels);
     setModels(Object.values(newCategorizedModels).flat());
-    console.log(Object.values(newCategorizedModels).flat())
-    // Actualizăm backend-ul
     await updateRank(Object.values(newCategorizedModels).flat());
   };
 
   return (
-    <div>
-      <button onClick={onBack} className="bg-red-600 text-white px-4 py-2 rounded-md shadow-md hover:bg-red-500 mb-4">Back to Category Selection</button>
-      <DragDropContext onDragEnd={handleDragEnd}>
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6 p-6">
-          {CATEGORIES.map((category) => (
-            <Droppable key={category.name} droppableId={category.name}>
-              {(provided) => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="p-4 bg-gray-800 rounded-lg shadow-md min-h-[300px]"
-                >
-                  <h2 className="text-white font-bold text-lg mb-4">{category.name}</h2>
-                  {categorizedModels[category.name]?.map((model, index) => (
-                    <Draggable key={model.name} draggableId={model.name} index={index}>
-                      {(provided) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.draggableProps}
-                          {...provided.dragHandleProps}
-                          className="bg-white text-black p-2 rounded-lg shadow-md mb-2 cursor-pointer"
-                        >
-                          {model.name} ({rankingKey}: {model[rankingKey]})
-                        </div>
-                      )}
-                    </Draggable>
-                  ))}
-                  {provided.placeholder}
-                </div>
-              )}
-            </Droppable>
-          ))}
-        </div>
-      </DragDropContext>
+    <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6">
+      <div className="container mx-auto">
+        <header className="mb-8 text-center">
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-500 rounded-lg p-6 shadow-lg">
+            <h1 className="text-4xl font-bold text-white">Kanban Board</h1>
+            <div className="mt-4">
+              <label htmlFor="ranking" className="mr-3 text-white font-medium">
+                Selectează Ranking-ul:
+              </label>
+              <select
+                id="ranking"
+                value={rankingKey}
+                onChange={(e) => setRankingKey(e.target.value as keyof VideoModel)}
+                className="rounded-md border border-gray-200 p-2 text-gray-800 focus:outline-none focus:ring-2 focus:ring-indigo-300"
+              >
+                {RANKING_KEYS.map((key) => (
+                  <option key={key} value={key}>
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+        </header>
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-6">
+            {CATEGORIES.map((category) => (
+              <Droppable key={category.name} droppableId={category.name}>
+                {(provided) => (
+                  <div
+                    ref={provided.innerRef}
+                    {...provided.droppableProps}
+                    className="bg-white rounded-lg shadow-xl p-4 min-h-[300px] border-2 border-indigo-600 hover:shadow-2xl transition-shadow duration-200"
+                  >
+                    <h2 className="text-xl font-bold text-indigo-700 mb-4">{category.name}</h2>
+                    {categorizedModels[category.name]?.map((model, index) => (
+                      <Draggable key={model.name} draggableId={model.name} index={index}>
+                        {(provided) => (
+                          <div
+                            ref={provided.innerRef}
+                            {...provided.draggableProps}
+                            {...provided.dragHandleProps}
+                            className="bg-white text-gray-800 p-4 rounded-md border-2 border-indigo-600 shadow-md hover:shadow-xl transition-all duration-200 mb-3 cursor-move"
+                          >
+                            {model.name} (<span className="font-medium">{rankingKey}</span>: {model[rankingKey]})
+                          </div>
+                        )}
+                      </Draggable>
+                    ))}
+                    {provided.placeholder}
+                  </div>
+                )}
+              </Droppable>
+            ))}
+          </div>
+        </DragDropContext>
+      </div>
     </div>
   );
 };
 
-const CategorySelection = () => {
-  const [selectedCategory, setSelectedCategory] = useState<keyof VideoModel | null>(null);
-  
-  return selectedCategory ? (
-    <KanbanBoard rankingKey={selectedCategory} onBack={() => setSelectedCategory(null)} />
-  ) : (
-    <div className="flex flex-col items-center gap-4 p-10">
-      <h1 className="text-white text-2xl font-bold">Select a Category</h1>
-      {(["brest", "ass", "face", "wife", "height"] as (keyof VideoModel)[]).map((key) => (
-        <button
-          key={key}
-          onClick={() => setSelectedCategory(key)}
-          className="bg-blue-600 text-white px-6 py-2 rounded-md shadow-md hover:bg-blue-500"
-        >
-          {key.charAt(0).toUpperCase() + key.slice(1)} Ranking
-        </button>
-      ))}
-    </div>
-  );
-};
-
-export default CategorySelection;
+export default CategoryKanban;
