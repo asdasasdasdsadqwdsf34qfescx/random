@@ -244,6 +244,12 @@ export async function add(updateData: VideoModel) {
 }
 
 export async function update(updateData: VideoModel) {
+  updateData.averageRating =
+    updateData.ass +
+    updateData.height +
+    updateData.brest +
+    updateData.face +
+    updateData.wife;
   const { error } = await supabase
     .from("models")
     .update(updateData)
@@ -269,20 +275,26 @@ export async function updateVideoCount(id: number) {
 }
 
 export async function updateRank(models: VideoModel[]) {
-
+  models.forEach((element) => {
+    element.averageRating =
+      element.ass +
+      element.height +
+      element.brest +
+      element.face +
+      element.wife;
+  });
 
   // Step 2: Upsert new data into the table
   const { error: upsertError } = await supabase
     .from("models")
     .upsert(models, { onConflict: "id" });
-  
+
   if (upsertError) {
     console.error("Error during upsert:", upsertError);
   } else {
     console.log("Data upserted successfully.");
   }
 }
-
 
 export async function getById(id: number) {
   const { data: model, error } = await supabase
