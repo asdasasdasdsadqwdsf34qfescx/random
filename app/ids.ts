@@ -249,7 +249,8 @@ export async function update(updateData: VideoModel) {
     updateData.height +
     updateData.brest +
     updateData.face +
-    updateData.wife;
+    updateData.wife +
+    updateData.overall
   const { error } = await supabase
     .from("models")
     .update(updateData)
@@ -281,7 +282,8 @@ export async function updateRank(models: VideoModel[]) {
       element.height +
       element.brest +
       element.face +
-      element.wife;
+      element.wife+
+      element.overall
   });
 
   // Step 2: Upsert new data into the table

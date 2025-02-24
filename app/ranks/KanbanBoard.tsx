@@ -14,10 +14,10 @@ const CATEGORIES = [
   { name: "Select 🔹", pts: 40 },
   { name: "Emerging 🌱", pts: 30 },
   { name: "Aspiring 🚀", pts: 20 },
-  { name: "Novice 🌟", pts: 10 },
+  { name: "Novice 🌟", pts: 0 },
 ];
 
-const RANKING_KEYS: (keyof VideoModel)[] = ["brest", "ass", "face", "wife", "height"];
+const RANKING_KEYS: (keyof VideoModel)[] = ["brest", "ass", "face", "wife", "height", "overall"];
 
 /* ========= VIEW BY CATEGORY ========= */
 /**
