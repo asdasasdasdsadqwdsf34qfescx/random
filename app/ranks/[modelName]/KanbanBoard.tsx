@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { getData, update, updateRank } from "../ids";
-import { VideoModel } from "../types";
+import { getData, update, updateRank } from "../../ids";
+import { VideoModel } from "../../types";
+import { useParams } from "next/navigation";
 
 // Definirea categoriilor și a ranking keys
 const CATEGORIES = [
@@ -17,7 +18,7 @@ const CATEGORIES = [
   { name: "Novice 🌟", pts: 0 },
 ];
 
-const RANKING_KEYS: (keyof VideoModel)[] = ["brest", "ass", "face", "wife", "height", "overall"];
+const RANKING_KEYS: (keyof VideoModel)[] = ["brest", "ass", "face", "wife", "height", "overall", "content"];
 
 /* ========= VIEW BY CATEGORY ========= */
 /**
@@ -141,8 +142,12 @@ const categorizeModelRankings = (
   }, {} as Record<string, (keyof VideoModel)[]>);
 };
 
-const ModelRankingKanbanSearch = () => {
-  const [models, setModels] = useState<VideoModel[]>([]);
+const ModelRankingKanbanSearch = ({
+  modelName,
+}: {
+
+  modelName: any;
+}) => {
   const [selectedModel, setSelectedModel] = useState<VideoModel | null>(null);
   const [categorizedRankings, setCategorizedRankings] = useState<Record<string, (keyof VideoModel)[]>>({});
   const [searchTerm, setSearchTerm] = useState("");
@@ -151,7 +156,8 @@ const ModelRankingKanbanSearch = () => {
     async function fetchModels() {
       const data = await getData();
       if (data) {
-        setModels(data);
+        const model = data.filter((m) => m.name === modelName)
+        setSelectedModel(model[0])
       }
     }
     fetchModels();
@@ -181,11 +187,6 @@ const ModelRankingKanbanSearch = () => {
     }
   };
 
-  // Filtrează modelele pe baza textului introdus
-  const filteredModels = models.filter((model) =>
-    model.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
-
   return (
     <div>
       {!selectedModel && (
@@ -198,23 +199,6 @@ const ModelRankingKanbanSearch = () => {
             placeholder="Introdu numele modelului..."
             className="mt-4 rounded-md border border-gray-200 p-2 text-gray-800 w-full max-w-md mx-auto"
           />
-          <div className="mt-4">
-            {filteredModels.map((model) => (
-              <div
-                key={model.name}
-                onClick={() => {
-                  setSelectedModel(model);
-                  setSearchTerm("");
-                }}
-                className="cursor-pointer bg-white rounded-md p-2 border border-indigo-600 mb-2 hover:bg-indigo-100 transition"
-              >
-                {model.name}
-              </div>
-            ))}
-            {filteredModels.length === 0 && (
-              <div className="text-gray-600 mt-2">Nu s-au găsit modele.</div>
-            )}
-          </div>
         </div>
       )}
       {selectedModel && (
@@ -278,6 +262,7 @@ const ModelRankingKanbanSearch = () => {
 /* ========= TOP-LEVEL DASHBOARD ========= */
 const KanbanDashboard = () => {
   const [viewType, setViewType] = useState<"category" | "model">("category");
+  const { modelName } = useParams();
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-50 to-purple-50 px-8 py-6">
@@ -309,7 +294,7 @@ const KanbanDashboard = () => {
             </div>
           </div>
         </header>
-        {viewType === "category" ? <CategoryKanban /> : <ModelRankingKanbanSearch />}
+        {viewType === "model" ? <ModelRankingKanbanSearch modelName={modelName}/>: <CategoryKanban />}
       </div>
     </div>
   );

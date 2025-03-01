@@ -24,6 +24,8 @@ const ModelProfile = () => {
   const [loading, setLoading] = useState(true);
   const [newVideoLink, setNewVideoLink] = useState("");
   const [showAddInput, setShowAddInput] = useState(false); // State to toggle input visibility
+  const [newNamgVideo, setNewBanfVideo] = useState("");
+  const [showAddInput2, setShowAddInput2] = useState(false); // State to toggle input visibility
 
   useEffect(() => {
     const getModel = async () => {
@@ -40,7 +42,7 @@ const ModelProfile = () => {
     getModel();
   }, [id]);
 
-  const handleAddVideo = async () => {
+  const handleAddVideoLink = async () => {
     if (!newVideoLink.trim()) {
       alert("Please enter a valid video link.");
       return;
@@ -60,7 +62,41 @@ const ModelProfile = () => {
     }
   };
 
+  const handleBangAddVideo = async () => {
+    if (!newVideoLink.trim()) {
+      alert("Please enter a valid video link.");
+      return;
+    }
+    if (!currentModel) return;
+
+    const updatedLinks = [...currentModel.spankBangLinks, newVideoLink];
+    const updatedModel = { ...currentModel, spankBangLinks: updatedLinks };
+
+    try {
+      await update(updatedModel);
+      setCurrentModel(updatedModel);
+      setNewBanfVideo(""); // Clear the input
+      setShowAddInput2(false); // Hide input after adding
+    } catch (error) {
+      console.error("Error adding video:", error);
+    }
+  };
+
   const handleRemoveVideo = async (index: number) => {
+    if (!currentModel) return;
+
+    const updatedLinks = currentModel.links.filter((_, i) => i !== index);
+    const updatedModel = { ...currentModel, links: updatedLinks };
+
+    try {
+      await update(updatedModel);
+      setCurrentModel(updatedModel);
+    } catch (error) {
+      console.error("Error removing video:", error);
+    }
+  };
+
+  const handleRemovelink = async (index: number) => {
     if (!currentModel) return;
 
     const updatedLinks = currentModel.links.filter((_, i) => i !== index);
@@ -161,7 +197,63 @@ const ModelProfile = () => {
         {/* Video Management */}
         <div className="space-y-6">
           <h2 className="rounded-xl text-3xl font-bold bg-clip-text bg-gradient-to-r from-blue-400">
-            <span className="p-2">Manage Videos</span>
+            <span className="p-2">Manage Videos Link</span>
+          </h2>
+
+          <div>
+            <button
+              onClick={() => setShowAddInput(!showAddInput)}
+              className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+            >
+              {showAddInput ? "Cancel" : "Add Link"}
+            </button>
+          </div>
+
+          {showAddInput && (
+            <div className="flex gap-4">
+              <input
+                type="text"
+                value={newVideoLink}
+                onChange={(e) => setNewVideoLink(e.target.value)}
+                placeholder="Enter video link..."
+                className="w-full p-2 rounded-lg bg-gray-800 text-white"
+              />
+              <button
+                onClick={handleAddVideoLink}
+                className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
+              >
+                Save
+              </button>
+            </div>
+          )}
+
+          {currentModel.links && currentModel.links.length > 0 ? (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {currentModel.links.map((link, index) => (
+                <div key={index} className="relative group">
+                    <button
+                   className="mb-4 px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600"
+                  >
+                     <a href={link}>Link {index}</a>
+                  </button>
+                  <button
+                    onClick={() => handleRemovelink(index)}
+                  >
+                    <FiTrash2 className="text-white" />
+                  </button>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="flex items-center justify-center py-12">
+              <p className="text-lg text-white/60">No videos available.</p>
+            </div>
+          )}
+        </div>
+        {/* Spankbang Management */}
+        <div className="space-y-6">
+          <h2 className="rounded-xl text-3xl font-bold bg-clip-text bg-gradient-to-r from-blue-400">
+            <span className="p-2">Spankbang Videos</span>
           </h2>
 
           <div>
@@ -183,7 +275,7 @@ const ModelProfile = () => {
                 className="w-full p-2 rounded-lg bg-gray-800 text-white"
               />
               <button
-                onClick={handleAddVideo}
+                onClick={handleBangAddVideo}
                 className="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600"
               >
                 Save
@@ -191,23 +283,21 @@ const ModelProfile = () => {
             </div>
           )}
 
-          {currentModel.links && currentModel.links.length > 0 ? (
+          {currentModel.spankBangLinks && currentModel.spankBangLinks.length > 0 ? (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {currentModel.links.map((link, index) => (
                 <div key={index} className="relative group">
                   <a href={link} className="block overflow-hidden rounded-2xl">
                     <iframe
                       src={link}
-                      frameBorder="0"
-                      width="100%"
-                      height="250"
-                      className="w-full aspect-video rounded-lg shadow-xl border border-gray-700"
+                      width="400"
+                      height="400"
+                      scrolling="no"
                       allowFullScreen
-                      title={`Video ${index + 1}`}
                     ></iframe>
                   </a>
                   <button
-                    onClick={() => handleRemoveVideo(index)}
+                    onClick={() => handleRemovelink(index)}
                     className="absolute top-2 right-2 p-2 bg-red-500 rounded-full hover:bg-red-600"
                   >
                     <FiTrash2 className="text-white" />

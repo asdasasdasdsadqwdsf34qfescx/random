@@ -1,54 +1,21 @@
 
-export const defaultNewModel: Omit<VideoModel, "id" | "isOnline" | "averageRating" | "links" | "avatarLink"> = {
+export const defaultNewModel = {
     videoId: [],
+    spankBangLinks: [],
     name: "",
     brest: 0,
-    nipples: 0,
-    legs: 0,
     ass: 0,
     face: 0,
-    pussy: 0,
     overall: 0,
-    voice: 0,
     content: 0,
-    eyes: 0,
-    lips: 0,
-    waist: 0,
     wife: 0,
-    haire: 0,
-    nails: 0,
-    nose: 0,
-    skin: 0,
-    hands: 0,//кисти рук
-    rear: 0,
-    front: 0,
-    ears: 0,
     height: 0,
-    weight: 0,
-    cheeks:0, //щекиы
-    instagram: null,
-    tiktok: null,
-    onlineCount: 0,
-    videoCount: 0,
-
-    thighs:0,
-    stomach:0,
-    buttshape:0,
-    eyebrows:0,
-    neck:0,
-    collarbone: 0,//ключица
-    shoulders: 0,//плечи
-    posture:0,//осанка
-    back: 0,
-    forearms: 0,//предплечья
-    style: 0,
-    poportions: 0,
-    generaimpression: 0,
   };
 
   export interface VideoModel {
     id?: number;
     videoId: string[];
+    spankBangLinks: string[]
     name: string;
     brest: number;
     nipples: number;

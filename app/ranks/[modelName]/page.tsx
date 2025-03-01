@@ -3,7 +3,7 @@
 import React from 'react';
 import KanbanBoard from './KanbanBoard';
 
- const KanbanPage = () => {
+ const ModelRank = () => {
   return (
     <div style={{
       display: 'flex',
@@ -50,4 +50,4 @@ import KanbanBoard from './KanbanBoard';
   
 };
 
-export default KanbanPage;
+export default ModelRank;

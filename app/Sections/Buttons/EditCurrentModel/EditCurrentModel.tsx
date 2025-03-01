@@ -45,6 +45,12 @@ export const EditCurrentModel = ({
     setIsDragging(false);
   };
 
+  const extractSrcFromIframe = (input: string): string => {
+    const regex = /src\s*=\s*"([^"]+)"/i;
+    const match = input.match(regex);
+    return match ? match[1] : input;
+  };
+
   useEffect(() => {
     if (isDragging) {
       document.addEventListener("mousemove", handleMouseMove);
@@ -69,9 +75,7 @@ export const EditCurrentModel = ({
         }}
         className={buttonClass}
       >
-        <span className="flex items-center gap-2">
-          Edit Model
-        </span>
+        <span className="flex items-center gap-2">Edit Model</span>
       </button>
       {showEditModal && currentVideo && (
         <div
@@ -93,8 +97,7 @@ export const EditCurrentModel = ({
               <button
                 onClick={() => setShowEditModal(false)}
                 className="p-1 hover:bg-gray-700 rounded-full transition-colors"
-              >
-              </button>
+              ></button>
             </div>
 
             <form
@@ -136,7 +139,7 @@ export const EditCurrentModel = ({
 
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-amber-100">
-                      Instagram 
+                      Instagram
                     </label>
                     <input
                       type="text"
@@ -153,100 +156,91 @@ export const EditCurrentModel = ({
 
                   <div className="space-y-2">
                     <label className="block text-sm font-medium text-amber-100">
-                      Tik Tok 
+                      Video IDs *
                     </label>
-                    <input
-                      type="text"
-                      className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition"
-                      value={editedModel!.tiktok ?? ""}
-                      onChange={(e) =>
+                    {editedModel?.videoId.map((id, index) => (
+                      <div key={index} className="flex gap-2 items-center">
+                        <input
+                          type="text"
+                          className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition"
+                          value={id}
+                          onChange={(e) => {
+                            let value = e.target.value;
+                            // Pentru modificări normale pe un singur link
+                            if (value.includes("mega.nz/file/")) {
+                              value = value.replace(
+                                "mega.nz/file/",
+                                "mega.nz/embed/"
+                              );
+                            }
+                            const newVideoIds = [...editedModel.videoId];
+                            newVideoIds[index] = value;
+                            setEditedModel({
+                              ...editedModel,
+                              videoId: newVideoIds,
+                            });
+                          }}
+                          onPaste={(e) => {
+                            // Interceptăm evenimentul de paste
+                            e.preventDefault();
+                            const pastedData = e.clipboardData.getData("text");
+                            // Împărțim textul pe linii și filtrăm eventualele linii goale
+                            let links = pastedData
+                              .split(/\r?\n/)
+                              .map((link) => link.trim())
+                              .filter((link) => link !== "");
+
+                            // Convertim fiecare link din formatul "file" în "embed" dacă este cazul
+                            links = links.map((link) =>
+                              link.includes("mega.nz/file/")
+                                ? link.replace(
+                                    "mega.nz/file/",
+                                    "mega.nz/embed/"
+                                  )
+                                : link
+                            );
+
+                            // Înlocuim elementul curent și inserăm linkurile rezultate
+                            const newVideoIds = [...editedModel.videoId];
+                            newVideoIds.splice(index, 1, ...links);
+                            setEditedModel({
+                              ...editedModel,
+                              videoId: newVideoIds,
+                            });
+                          }}
+                        />
+                        <button
+                          type="button"
+                          onClick={() => {
+                            // Elimină Video ID-ul de la indexul curent
+                            const newVideoIds = editedModel.videoId.filter(
+                              (_, i) => i !== index
+                            );
+                            setEditedModel({
+                              ...editedModel,
+                              videoId: newVideoIds,
+                            });
+                          }}
+                          className="p-1 hover:bg-gray-700 rounded-full transition-colors"
+                        >
+                          <XMarkIcon className="h-5 w-5 text-red-500" />
+                        </button>
+                      </div>
+                    ))}
+                    <button
+                      type="button"
+                      onClick={() =>
                         setEditedModel({
-                          ...editedModel!,
-                          tiktok: e.target.value,
+                          ...editedModel,
+                          videoId: [...editedModel!.videoId, ""],
                         })
                       }
-                    />
+                      className="px-3 py-1 rounded-full bg-gray-800 text-white text-sm font-bold shadow-lg hover:bg-gray-700 transition transform hover:scale-105"
+                    >
+                      <PencilSquareIcon className="h-5 w-5 inline-block mr-1" />
+                      Adaugă Video ID
+                    </button>
                   </div>
-
-                  <div className="space-y-2">
-                    <label className="block text-sm font-medium text-amber-100">
-                      Video IDs (comma separated) *
-                    </label>
-                    <input
-                      type="text"
-                      className="w-full p-3 bg-gray-700 rounded-lg border border-gray-600 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/50 outline-none transition"
-                      value={editedModel!.videoId.join(", ")}
-                      onChange={(e) =>
-                        setEditedModel({
-                          ...editedModel!,
-                          videoId: e.target.value
-                            .split(",")
-                            .map((id) => id.trim()),
-                        })
-                      }
-                    />
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4">
-                  {[
-                    ["Brest", "brest"],
-                    ["Nipples", "nipples"],
-                    ["Legs", "legs"],
-                    ["Ass", "ass"],
-                    ["Face", "face"],
-                    ["Pussy", "pussy"],
-                    ["Overall", "overall"],
-                    ["Voice", "voice"],
-                    ["Content", "content"],
-                    ["Eyes", "eyes"],
-                    ["Lips", "lips"],
-                    ["Waist", "waist"],
-                    ["Wife", "wife"],
-                    ["Haire", "haire"],
-                    ["Nails", "nails"],
-                    ["Skin", "skin"],
-                    ["Hands", "hands"],
-                    ["Rear", "rear"],
-                    ["Front", "front"],
-                    ["Ears", "ears"],
-                    ["Height", "height"],
-                    ["Weight", "weight"],
-                    ["Nose", "nose"],
-                    ["Cheeks", "cheeks"],
-                    ["Thighs", "thighs"],
-                    ["Stomach", "stomach"],
-                    ["Eyebrows", "eyebrows"],
-                    ["Neck", "neck"],
-                    ["Collarbone", "collarbone"],
-                    ["Shoulders", "shoulders"],
-                    ["Posture", "posture"],
-                    ["Back", "back"],
-                    ["Forearms", "forearms"],
-                    ["Style", "style"],
-                    ["Poportions", "poportions"],
-                    ["Generalimpression", "generalimpression"],
-                    ["Buttshape", "buttshape"],
-                  ].map(([label]) => (
-                    <div key={label}>
-                      <label className="block text-sm text-amber-100">
-                        {label}
-                      </label>
-                      <input
-                        type="number"
-                        min="1"
-                        max="1000"
-                        className="w-full p-2 bg-gray-700 rounded-md border border-gray-600 focus:border-amber-500 focus:ring-1 focus:ring-amber-500/50 outline-none transition"
-                        value={editedModel![label.toLowerCase() as keyof typeof editedModel]}
-                        onChange={(e) =>
-                          setEditedModel({
-                            ...editedModel!,
-                            [label.toLowerCase()]: parseInt(e.target.value),
-                          })
-                        }
-                      />
-                    </div>
-                  ))}
                 </div>
               </div>
 

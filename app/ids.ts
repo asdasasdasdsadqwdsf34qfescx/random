@@ -238,7 +238,7 @@ export async function getVideoRating(): Promise<VideoModel[] | undefined> {
   }
 }
 
-export async function add(updateData: VideoModel) {
+export async function add(updateData: any) {
   const { error } = await supabase.from("models").insert(updateData);
   console.log(error);
 }
@@ -250,7 +250,9 @@ export async function update(updateData: VideoModel) {
     updateData.brest +
     updateData.face +
     updateData.wife +
-    updateData.overall
+    updateData.overall +
+    updateData.content;
+    console.log(updateData)
   const { error } = await supabase
     .from("models")
     .update(updateData)
@@ -282,8 +284,9 @@ export async function updateRank(models: VideoModel[]) {
       element.height +
       element.brest +
       element.face +
-      element.wife+
-      element.overall
+      element.wife +
+      element.overall +
+      element.content;
   });
 
   // Step 2: Upsert new data into the table
