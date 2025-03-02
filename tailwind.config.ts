@@ -17,6 +17,11 @@ const config: Config = {
     },
   },
   plugins: [require("tailwind-scrollbar-hide")],
-  
+  variants: {
+    extend: {
+      opacity: ['group-hover'],
+      display: ['group-hover']
+    }
+  }
 };
 export default config;
