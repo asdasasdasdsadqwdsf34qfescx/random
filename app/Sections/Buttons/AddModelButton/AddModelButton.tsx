@@ -1,33 +1,21 @@
 import { add, getData } from "@/app/ids";
 import { defaultNewModel, VideoModel } from "@/app/types";
+import { useState } from "react";
 
 export const AddModelButton = ({
-  newModel,
-  setVideoDetails,
-  setCurrentVideo,
   setShowAddModal,
-  setNewModel,
 }: {
-  newModel: typeof defaultNewModel;
-  setVideoDetails: (value: any) => void;
-  setCurrentVideo: (value: any) => void;
   setShowAddModal: (value: any) => void;
-  setNewModel: (value: any) => void;
 }) => {
+    const [newModel, setNewModel] = useState<VideoModel | null>(defaultNewModel as any);
   const handleAddSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       // Use newModel from state rather than a static constant
       await add(newModel);
 
-      const details = await getData();
-      if (details) {
-        setVideoDetails(details);
-        setCurrentVideo(details[0]);
-      }
-
       setShowAddModal(false);
-      setNewModel(defaultNewModel);
+      setNewModel(defaultNewModel as any);
     } catch (error) {
       console.error("Error adding model:", error);
     }
@@ -77,29 +65,10 @@ export const AddModelButton = ({
                     type="text"
                     required
                     className="w-full px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-900 transition-all"
-                    value={newModel.name}
+                    value={newModel!.name}
                     onChange={(e) =>
-                      setNewModel({ ...newModel, name: e.target.value })
+                      setNewModel({ ...newModel!, name: e.target.value })
                     }
-                  />
-                </div>
-
-                <div className="relative">
-                  <label className="text-sm text-gray-300 mb-1 block">
-                    Video IDs *
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    className="w-full px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-900 transition-all"
-                    value={newModel.videoId.join(", ")}
-                    onChange={(e) =>
-                      setNewModel({
-                        ...newModel,
-                        videoId: e.target.value.split(",").map((id) => id.trim()),
-                      })
-                    }
-                    placeholder="comma separated IDs"
                   />
                 </div>
 
@@ -110,106 +79,7 @@ export const AddModelButton = ({
             </div>
           </div>
 
-          {/* Right Column */}
-          <div className="space-y-6">
-            {/* Face Features */}
-            <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-pink-300">
-                👩 Face Features
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[["Face", "face"]].map(([label, key]) => (
-                  <div key={key} className="relative">
-                    <label className="text-sm text-gray-300 mb-1 block">
-                      {label}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      required
-                      className="w-full px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-900 transition-all"
-                      value={newModel[key as keyof typeof newModel]}
-                      onChange={(e) =>
-                        setNewModel({
-                          ...newModel,
-                          [key]: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Body Features */}
-            <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-blue-300">
-                💪 Body Features
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  ["Brest", "brest"],
-                  ["Ass", "ass"],
-                  ["Height", "height"],
-                ].map(([label, key]) => (
-                  <div key={key} className="relative">
-                    <label className="text-sm text-gray-300 mb-1 block">
-                      {label}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      required
-                      className="w-full px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-900 transition-all"
-                      value={newModel[key as keyof typeof newModel]!}
-                      onChange={(e) =>
-                        setNewModel({
-                          ...newModel,
-                          [key]: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Additional Features */}
-            <div className="bg-gray-800/30 p-5 rounded-xl border border-gray-700/50">
-              <h3 className="text-lg font-semibold mb-4 flex items-center gap-2 text-green-300">
-                ✨ Additional Features
-              </h3>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  ["Content", "content"],
-                  ["Overall", "overall"],
-                ].map(([label, key]) => (
-                  <div key={key} className="relative">
-                    <label className="text-sm text-gray-300 mb-1 block">
-                      {label}
-                    </label>
-                    <input
-                      type="number"
-                      min="0"
-                      max="10"
-                      required
-                      className="w-full px-4 py-2.5 bg-gray-800 rounded-lg border border-gray-700 focus:border-purple-500 focus:ring-2 focus:ring-purple-900 transition-all"
-                      value={newModel[key as keyof typeof newModel]!}
-                      onChange={(e) =>
-                        setNewModel({
-                          ...newModel,
-                          [key]: parseInt(e.target.value) || 0,
-                        })
-                      }
-                    />
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
+        
           {/* Submit Buttons */}
           <div className="lg:col-span-2 pt-6 border-t border-gray-700/50">
             <div className="flex justify-end gap-3">

@@ -41,7 +41,6 @@ import KanbanBoard from './KanbanBoard';
           }}>Top Height</span>
           📏
         </h2>
-        <KanbanBoard/>
       </div>
 
     
