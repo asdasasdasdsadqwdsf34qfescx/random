@@ -90,7 +90,7 @@ const ModelProfile = () => {
   // Funcție pentru search
   const handleSearch = () => {
     if (searchTerm.trim()) {
-      router.push(`/${searchTerm.trim()}`);
+      router.push(`/profile/${searchTerm.trim()}`);
     }
   };
 
