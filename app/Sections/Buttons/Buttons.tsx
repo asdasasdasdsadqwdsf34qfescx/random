@@ -92,11 +92,7 @@ export const ButtonsSection = ({
 
       {showAddModal && (
         <AddModelButton
-          setVideoDetails={setVideoDetails}
-          setCurrentVideo={setCurrentVideo}
           setShowAddModal={setShowAddModal}
-          setNewModel={setNewModel}
-          newModel={newModel}
         />
       )}
     </div>
