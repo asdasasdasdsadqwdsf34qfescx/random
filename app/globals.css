@@ -10,3 +10,16 @@
       transition-duration: 150ms;
     }
   }
+
+  .masonry-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    grid-auto-rows: minmax(200px, auto);
+    grid-gap: 2rem;
+  }
+  
+  @supports (grid-template-rows: masonry) {
+    .masonry-grid {
+      grid-template-rows: masonry;
+    }
+  }

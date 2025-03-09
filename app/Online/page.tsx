@@ -15,7 +15,9 @@ const OnlineTab = () => {
     { name: "agnieszkabanana", isOnline: true /*, ...alte proprietăți */ },
     { name: "tender_diana", isOnline: true /*, ...alte proprietăți */ },
     { name: "swt_shadow", isOnline: true /*, ...alte proprietăți */ },
-    // Poți adăuga mai multe modele aici
+    { name: "lizamyah", isOnline: true /*, ...alte proprietăți */ },
+
+    // Poți adăuga mai multe modele aici lizamyah
   ];
 
   useEffect(() => {

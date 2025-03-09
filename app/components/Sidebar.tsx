@@ -62,6 +62,16 @@ export default function Sidebar() {
               >
                 Online Models
               </Link>
+            </li>#
+            <li>
+              <Link
+                href="/Photos"
+                className={`block p-2 rounded hover:bg-gray-700 ${
+                  mounted && pathname === "/Photos" ? "bg-gray-700" : ""
+                }`}
+              >
+                Gallery
+              </Link>
             </li>
           </ul>
         </nav>

@@ -20,6 +20,18 @@ export async function getData(): Promise<VideoModel[] | undefined> {
   }
 }
 
+export async function getPhoto() {
+  const { data, error } = await supabase
+    .from("photo")
+    .select()
+
+  if (error) {
+    console.error("Error fetching data:", error);
+  } else {
+    return data;
+  }
+}
+
 export async function getOnlineRating(): Promise<VideoModel[] | undefined> {
   try {
     // Fetch data sorted by onlineCount (descending) and then by name (ascending)
@@ -87,6 +99,11 @@ export async function geTopField(
   } else {
     return data;
   }
+}
+
+export async function addPhoto(link: string) {
+  const { data, error } = await supabase.from("photo").insert({link});
+  console.log(data);
 }
 
 export async function add(updateData: any) {
