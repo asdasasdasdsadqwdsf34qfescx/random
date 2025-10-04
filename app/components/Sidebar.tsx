@@ -157,7 +157,7 @@ export default function Sidebar() {
               <label htmlFor="category-select" className="sr-only">Select category</label>
               <select
                 id="category-select"
-                className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                className="w-full bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
                 value={selectedCategoryHref}
                 onChange={(e) => {
                   const val = e.target.value;
