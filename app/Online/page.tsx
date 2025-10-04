@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Sidebar from "../components/Sidebar";
 import { VideoModel } from "@/app/types";
-import { add, getOnlineModels } from "../ids";
+import { getOnlineModels } from "../ids";
 
 // Add model modal
 const AddModelModal = ({
@@ -98,8 +98,6 @@ const OnlinePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newModelName, setNewModelName] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
 
   const fetchData = async () => {
@@ -140,16 +138,6 @@ const OnlinePage = () => {
     return list;
   }, [online, query]);
 
-  const handleAddModel = async () => {
-    if (!newModelName.trim()) return;
-    try {
-      await add(newModelName.trim());
-      setNewModelName("");
-      setShowAddModal(false);
-    } catch {
-      alert("Failed to add model");
-    }
-  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -179,12 +167,6 @@ const OnlinePage = () => {
                 Refresh
               </button>
             </div>
-            <button
-              onClick={() => setShowAddModal(true)}
-              className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
-            >
-              Add pinned
-            </button>
           </div>
         </header>
 
@@ -213,16 +195,6 @@ const OnlinePage = () => {
         )}
       </main>
 
-      <AddModelModal
-        show={showAddModal}
-        onAdd={handleAddModel}
-        onCancel={() => {
-          setShowAddModal(false);
-          setNewModelName("");
-        }}
-        newModelName={newModelName}
-        setNewModelName={setNewModelName}
-      />
     </div>
   );
 };
