@@ -1,11 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef, memo } from "react";
+import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Sidebar from "../components/Sidebar";
+import { useSidebar } from "../components/ui/SidebarContext";
 import { VideoModel } from "@/app/types";
 import { add, getOnlineModels } from "../ids";
 
-// Модальное окно для добавления новой модели
+// Add model modal
 const AddModelModal = ({
   show,
   onAdd,
@@ -21,39 +22,37 @@ const AddModelModal = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   useEffect(() => {
-    if (show && inputRef.current) {
-      inputRef.current.focus();
-    }
+    if (show && inputRef.current) inputRef.current.focus();
   }, [show]);
-
   if (!show) return null;
   return (
-    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/40 backdrop-blur-sm">
-      <div className="bg-slate-900 p-8 rounded-2xl shadow-2xl border-2 border-emerald-400/20 min-w-[320px] flex flex-col gap-4">
-        <h2 className="text-xl font-bold text-white mb-2">Add New Pinned Model</h2>
-        <input
-          type="text"
-          placeholder="Model name"
-          value={newModelName}
-          onChange={(e) => setNewModelName(e.target.value)}
-          className="px-4 py-3 rounded-lg bg-white text-slate-900 border-2 border-emerald-400 focus:outline-none focus:ring-4 focus:ring-emerald-300 text-lg font-semibold shadow-md placeholder:text-slate-400"
-          ref={inputRef}
-          style={{ minWidth: 0 }}
-        />
-        <div className="flex gap-4 mt-4">
-          <button
-            className="flex-1 px-4 py-2 rounded bg-gradient-to-r from-emerald-400 to-cyan-400 text-slate-900 font-semibold hover:from-emerald-300 hover:to-cyan-300 transition-colors"
-            onClick={onAdd}
-            disabled={!newModelName.trim()}
-          >
-            Add
-          </button>
-          <button
-            className="flex-1 px-4 py-2 rounded bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-colors"
-            onClick={onCancel}
-          >
-            Cancel
-          </button>
+    <div className="fixed inset-0 z-40 flex items-center justify-center bg-black/50">
+      <div className="bg-white dark:bg-slate-900 p-6 rounded-xl shadow-2xl w-full max-w-md border border-slate-200 dark:border-slate-700">
+        <h2 className="text-lg font-semibold mb-4">Add pinned model</h2>
+        <div className="space-y-4">
+          <input
+            ref={inputRef}
+            type="text"
+            placeholder="Model name"
+            value={newModelName}
+            onChange={(e) => setNewModelName(e.target.value)}
+            className="w-full px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-900 dark:text-slate-100"
+          />
+          <div className="flex gap-3 justify-end">
+            <button
+              onClick={onCancel}
+              className="px-4 py-2 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+            >
+              Cancel
+            </button>
+            <button
+              onClick={onAdd}
+              disabled={!newModelName.trim()}
+              className="px-4 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500 disabled:opacity-50"
+            >
+              Add
+            </button>
+          </div>
         </div>
       </div>
     </div>
@@ -62,162 +61,152 @@ const AddModelModal = ({
 
 const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
   const [showVideo, setShowVideo] = useState(false);
-
-  const handleMouseEnter = () => {
-    setShowVideo(true);
-  };
-
-  const handleMouseLeave = () => {
-    setShowVideo(false);
-  };
-
   return (
-    <div
-      className="group relative bg-white/10 backdrop-blur-xl rounded-2xl overflow-hidden shadow-xl transition-transform duration-300 hover:scale-[1.04] hover:shadow-2xl hover:z-20 border border-gradient-to-br from-yellow-400/40 via-emerald-400/30 to-cyan-400/40 hover:border-emerald-400/60 ring-1 ring-white/10"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
+    <article
+      className="group relative rounded-xl overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
+      onMouseEnter={() => setShowVideo(true)}
+      onMouseLeave={() => setShowVideo(false)}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-emerald-400/10 to-cyan-400/10 opacity-60 group-hover:opacity-80 transition-opacity duration-500 pointer-events-none z-0" />
       <div className="aspect-video relative">
         {showVideo ? (
           <iframe
             src={`https://chaturbate.com/embed/${model.name}/?join_overlay=1&campaign=GeOP2&embed_video_only=1&disable_sound=1&tour=9oGW&mobileRedirect=never&disable_autoplay=1`}
-            className="w-full h-full object-cover rounded-t-2xl shadow-2xl border-b-4 border-emerald-400/30"
+            className="w-full h-full"
             frameBorder="0"
             scrolling="no"
             allowFullScreen
             title={`${model.name} Live Cam`}
             loading="lazy"
           />
-          
         ) : (
           <img
-            src={model.imageUrl}
-            alt={`Preview for ${model.name}`}
-            className="w-full h-full object-cover rounded-t-2xl shadow-xl border-b-4 border-yellow-400/20"
+            src={model.imageUrl || "/vercel.svg"}
+            alt={model.name}
+            className="w-full h-full object-cover"
           />
         )}
       </div>
-        <span className="flex justify-center items-center font-bold text-lg text-transparent bg-gradient-to-r from-yellow-300 via-emerald-300 to-cyan-300 bg-clip-text drop-shadow">
-          {model.name}
-        </span>
-    </div>
+      <div className="p-3">
+        <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate" title={model.name}>{model.name}</h3>
+      </div>
+    </article>
   );
 });
+OnlineModelCard.displayName = "OnlineModelCard";
 
-const OnlineTab = () => {
+const OnlinePage = () => {
   const [online, setOnline] = useState<VideoModel[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [query, setQuery] = useState("");
+  const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { isOpen } = useSidebar();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
 
-  useEffect(() => {
-    let isMounted = true;
-    const fetchData = async () => {
-      try {
-        const onlineModels = await getOnlineModels();
-        if (isMounted && onlineModels) {
-          setOnline(onlineModels);
-        }
-      } catch (error) {
-        if (isMounted) console.error("Error fetching video data:", error);
-      } finally {
-        if (isMounted) setIsLoading(false);
+  const fetchData = async () => {
+    try {
+      setError(null);
+      const onlineModels = await getOnlineModels();
+      if (Array.isArray(onlineModels)) {
+        setOnline(onlineModels);
+        setLastUpdated(new Date());
+      } else {
+        setOnline([]);
       }
+    } catch (e: any) {
+      setError(e?.message || "Failed to load online models");
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    let mounted = true;
+    const run = async () => {
+      if (!mounted) return;
+      await fetchData();
     };
-    fetchData();
-    const interval = setInterval(fetchData, 5000);
+    run();
+    const id = setInterval(run, 5000);
     return () => {
-      isMounted = false;
-      clearInterval(interval);
+      mounted = false;
+      clearInterval(id);
     };
   }, []);
 
+  const filtered = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    let list = online;
+    if (q) list = list.filter((m) => m.name.toLowerCase().includes(q));
+    return list;
+  }, [online, query]);
+
   const handleAddModel = async () => {
-    if (newModelName.trim()) {
-      try {
-        await add(newModelName.trim());
-        setNewModelName("");
-        setShowAddModal(false);
-      } catch (err) {
-        alert("Failed to add model to database.");
-      }
+    if (!newModelName.trim()) return;
+    try {
+      await add(newModelName.trim());
+      setNewModelName("");
+      setShowAddModal(false);
+    } catch {
+      alert("Failed to add model");
     }
   };
 
   return (
-    <div className="p-6 min-h-screen relative overflow-hidden bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
-      {/* Animated background particles */}
-      <div className="absolute inset-0 z-0 pointer-events-none">
-        <svg
-          className="absolute top-1/4 left-1/4 w-96 h-96 opacity-40 animate-spin-slow"
-          viewBox="0 0 400 400"
-          fill="none"
-        >
-          <circle
-            cx="200"
-            cy="200"
-            r="160"
-            stroke="url(#gold)"
-            strokeWidth="12"
-            strokeDasharray="20 24"
-          />
-          <defs>
-            <linearGradient id="gold" x1="0" y1="0" x2="1" y2="1">
-              <stop stopColor="#FFD700" />
-              <stop offset="1" stopColor="#00FFD0" />
-            </linearGradient>
-          </defs>
-        </svg>
-        <div className="absolute w-96 h-96 bg-emerald-400/20 rounded-full -top-48 -left-48 blur-3xl mix-blend-screen" />
-        <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full -bottom-48 -right-48 blur-3xl mix-blend-screen" />
-        <div className="absolute inset-0 bg-gradient-to-br from-yellow-400/10 via-emerald-400/10 to-cyan-400/10 opacity-30" />
-      </div>
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-      <div className="absolute inset-0 opacity-10">
-        <div className="absolute w-96 h-96 bg-emerald-500/20 rounded-full -top-48 -left-48 mix-blend-screen" />
-        <div className="absolute w-96 h-96 bg-purple-500/20 rounded-full -bottom-48 -right-48 mix-blend-screen" />
-      </div>
-      {isLoading ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative z-10">
-          {[...Array(10)].map((_, i) => (
-            <div key={i} className="aspect-video bg-slate-800/50 rounded-xl animate-pulse">
-              <div className="h-full w-full bg-slate-700/30 rounded-xl" />
-            </div>
-          ))}
-        </div>
-      ) : online.length > 0 ? (
-        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-6 relative z-10">
-          {online.map((model) => (
-            <OnlineModelCard key={model.name} model={model} />
-          ))}
-        </div>
-      ) : (
-        <div className="text-center py-24 relative z-10">
-          <div className="inline-block bg-white/10 backdrop-blur-xl p-10 rounded-2xl border-2 border-gradient-to-r from-yellow-400 via-emerald-400 to-cyan-400 shadow-xl">
-            <div className="text-7xl mb-4 animate-bounce">🌌</div>
-            <h3 className="text-2xl font-extrabold text-transparent bg-gradient-to-r from-yellow-400 via-emerald-400 to-cyan-400 bg-clip-text drop-shadow-lg mb-2">
-              No Broadcasts Currently Live
-            </h3>
-            <p className="text-slate-200 max-w-md mx-auto font-mono">
-              Our elite performers are preparing their next show.<br />Check back soon for exclusive live experiences.
+      <main className={`px-4 sm:px-6 lg:px-8 py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
+        <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
+          <div>
+            <h1 className="text-2xl font-semibold">Online Models</h1>
+            <p className="text-sm text-slate-500 dark:text-slate-400">
+              {isLoading ? "Loading…" : `${filtered.length} online`} {lastUpdated && `• Updated ${lastUpdated.toLocaleTimeString()}`}
             </p>
           </div>
-        </div>
-      )}
-      {/* Floating Add Button */}
-      <button
-        onClick={() => setShowAddModal(true)}
-        className="fixed z-30 bottom-8 right-8 bg-gradient-to-tr from-cyan-400 via-emerald-400 to-yellow-400 text-white p-0.5 rounded-full shadow-2xl hover:scale-110 transition-transform duration-200 ring-2 ring-white/30 focus:outline-none"
-        title="Add New Pinned Model"
-        style={{ minWidth: 0 }}
-      >
-        <span className="flex items-center justify-center w-16 h-16 bg-slate-900 rounded-full text-4xl font-extrabold">
-          +
-        </span>
-      </button>
-      {/* Modal for adding a new model */}
-// ...
+          <div className="flex flex-col sm:flex-row gap-2 sm:items-center">
+            <div className="flex items-center gap-2">
+              <input
+                value={query}
+                onChange={(e) => setQuery(e.target.value)}
+                placeholder="Search by name…"
+                className="w-56 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
+              />
+              <button
+                onClick={() => setShowAddModal(true)}
+                className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
+              >
+                Add model
+              </button>
+            </div>
+          </div>
+        </header>
+
+        {error && (
+          <div className="mb-4 p-3 rounded-md border border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40">
+            {error}
+          </div>
+        )}
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {Array.from({ length: 10 }).map((_, i) => (
+              <div key={i} className="aspect-video rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
+            ))}
+          </div>
+        ) : filtered.length > 0 ? (
+          <section aria-label="Online models grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+            {filtered.map((model) => (
+              <OnlineModelCard key={model.name} model={model} />
+            ))}
+          </section>
+        ) : (
+          <div className="text-center py-16">
+            <p className="text-slate-500">No live broadcasts right now. Please check back soon.</p>
+          </div>
+        )}
+      </main>
+
       <AddModelModal
         show={showAddModal}
         onAdd={handleAddModel}
@@ -228,8 +217,9 @@ const OnlineTab = () => {
         newModelName={newModelName}
         setNewModelName={setNewModelName}
       />
+
     </div>
   );
 };
 
-export default OnlineTab;
+export default OnlinePage;

@@ -1,6 +1,6 @@
 import { getImagesFromCategory } from "../../../../lib/imageUtils.js";
 
-export const GET = async (request, { params }) => {
-  const { category } = params;
+export async function GET(request, context) {
+  const { category } = await context.params;
   return await getImagesFromCategory(category);
-};
+}
