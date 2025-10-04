@@ -1,9 +1,10 @@
 "use client";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useMemo, useState } from "react";
+import { usePathname, useRouter } from "next/navigation";
+import { useEffect, useMemo, useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useSidebar } from "./ui/SidebarContext";
+import Image from "next/image";
 import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2, Settings as SettingsIcon } from "lucide-react";
 
 const navItems = [
@@ -35,15 +36,47 @@ const navItems = [
 
 export default function Sidebar() {
   const pathname = usePathname();
+  const router = useRouter();
   const { isOpen, toggle, close } = useSidebar();
   const [query, setQuery] = useState("");
 
   const items = useMemo(() => navItems, []);
   const mainItems = useMemo(() => items.filter(i => !i.href.startsWith("/category/")), [items]);
   const categoryItems = useMemo(
-    () => items.filter(i => i.href.startsWith("/category/")).filter(i => i.label.toLowerCase().includes(query.toLowerCase())),
+    () => items
+      .filter(i => i.href.startsWith("/category/"))
+      .filter(i => i.label.toLowerCase().includes(query.toLowerCase())),
     [items, query]
   );
+
+  const [modelPhotos, setModelPhotos] = useState<string[]>([]);
+  const [loadingModels, setLoadingModels] = useState<boolean>(false);
+
+  useEffect(() => {
+    const fetchModels = async () => {
+      try {
+        setLoadingModels(true);
+        const res = await fetch("/api/images/photos");
+        if (!res.ok) throw new Error("Failed to load models");
+        const data = await res.json();
+        setModelPhotos(Array.isArray(data.images) ? data.images : []);
+      } catch (_) {
+        setModelPhotos([]);
+      } finally {
+        setLoadingModels(false);
+      }
+    };
+    fetchModels();
+  }, []);
+
+  const filteredModels = useMemo(() => {
+    const q = query.toLowerCase();
+    return modelPhotos.filter((p) => p.replace(/\.[^.]+$/, "").toLowerCase().includes(q));
+  }, [modelPhotos, query]);
+
+  const selectedCategoryHref = useMemo(() => {
+    return pathname && pathname.startsWith("/category/") && items.some(i => i.href === pathname) ? pathname : "";
+  }, [pathname, items]);
 
   return (
     <>
@@ -119,25 +152,62 @@ export default function Sidebar() {
 
           <div>
             <div className="px-3 mb-2 text-xs uppercase tracking-wider text-white/50">Categories</div>
-            <ul className="space-y-1">
-              {categoryItems.map(({ href, label, icon: Icon }) => {
-                const active = pathname === href;
-                return (
-                  <li key={href}>
-                    <Link
-                      href={href}
-                      className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent
-                      ${active ? "bg-indigo-600/90 text-white border-indigo-500/30" : "hover:bg-white/10"}`}
-                      onClick={close}
-                      title={label}
-                    >
-                      <Icon className="w-4.5 h-4.5 text-white/70 group-hover:text-white" />
-                      <span className="truncate">{label}</span>
-                    </Link>
-                  </li>
-                );
-              })}
-            </ul>
+            <div className="px-2">
+              <label htmlFor="category-select" className="sr-only">Select category</label>
+              <select
+                id="category-select"
+                className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                value={selectedCategoryHref}
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val) {
+                    router.push(val);
+                    close();
+                  }
+                }}
+              >
+                <option value="">Select a category</option>
+                {categoryItems.map(({ href, label }) => (
+                  <option key={href} value={href}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
+
+          <div>
+            <div className="px-3 mt-4 mb-2 text-xs uppercase tracking-wider text-white/50">Models</div>
+            <div className="px-2 pb-1">
+              {loadingModels ? (
+                <div className="text-xs text-white/60 px-1 py-1">Loading models...</div>
+              ) : filteredModels.length === 0 ? (
+                <div className="text-xs text-white/60 px-1 py-1">No models found</div>
+              ) : (
+                <ul className="grid grid-cols-3 gap-2 pr-2 max-h-56 overflow-y-auto scrollbar-hide">
+                  {filteredModels.map((photo) => {
+                    const name = photo.replace(/\.[^.]+$/, "");
+                    return (
+                      <li key={photo}>
+                        <button
+                          className="w-full flex flex-col items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                          onClick={() => {
+                            router.push(`/videos/${encodeURIComponent(name)}`);
+                            close();
+                          }}
+                          title={name}
+                        >
+                          <div className="relative w-14 h-14 rounded-full overflow-hidden border border-white/20 shadow">
+                            <Image src={`/photos/${photo}`} alt={name} fill className="object-cover" />
+                          </div>
+                          <span className="text-[10px] text-white/80 truncate w-full text-center">{name}</span>
+                        </button>
+                      </li>
+                    );
+                  })}
+                </ul>
+              )}
+            </div>
           </div>
 
           <div className="pt-1 border-t border-white/10">
