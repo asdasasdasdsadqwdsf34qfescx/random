@@ -2,6 +2,7 @@
 import Sidebar from "@/app/components/Sidebar";
 import { MediaGallery } from "@/app/components/shared/MediaGallery";
 import { notFound, useParams } from "next/navigation";
+import { useSidebar } from "@/app/components/ui/SidebarContext";
 
 const CATEGORY_CONFIG: Record<string, { apiBasePath: string; basePath: string; videoFilter: string; title: string }> = {
   asian: { apiBasePath: "asian", basePath: "asian", videoFilter: "asian", title: "Asian" },
@@ -35,15 +36,19 @@ export default function CategoryPage() {
 
   if (!cfg) return notFound();
 
+  const { isOpen } = useSidebar();
+
   return (
-    <div className="flex w-full min-h-screen bg-gradient-to-br from-gray-950 to-black">
+    <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-      <MediaGallery
-        apiEndpoint={`/api/images/${encodeURIComponent(cfg.apiBasePath)}`}
-        videoFilter={cfg.videoFilter}
-        basePath={cfg.basePath}
-        title={cfg.title}
-      />
+      <main className={`px-4 sm:px-6 lg:px-8 py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
+        <MediaGallery
+          apiEndpoint={`/api/images/${encodeURIComponent(cfg.apiBasePath)}`}
+          videoFilter={cfg.videoFilter}
+          basePath={cfg.basePath}
+          title={cfg.title}
+        />
+      </main>
     </div>
   );
 }
