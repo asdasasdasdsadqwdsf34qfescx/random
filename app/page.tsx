@@ -4,6 +4,7 @@ import Sidebar from "./components/Sidebar";
 import Pagination from "./components/Pagination";
 import VideoCard from "./components/VideoCard";
 import { getVideosPaths } from "@/lib/clientApi";
+import { useSidebar } from "./components/ui/SidebarContext";
 
 interface VideoPath { path: string }
 interface VideoResponse { videos: VideoPath[]; total: number }
@@ -43,10 +44,12 @@ export default function VideoPage() {
     };
   }, [currentPage]);
 
+  const { isOpen } = useSidebar();
+
   return (
     <div className="relative">
       <Sidebar />
-      <section className="ml-0 md:ml-64 p-4 md:p-8">
+      <section className={`${isOpen ? "md:ml-64" : "md:ml-0"} ml-0 p-4 md:p-8 transition-[margin] duration-300`}>
         <h1 className="sr-only">Latest Videos</h1>
         {error && (
           <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
