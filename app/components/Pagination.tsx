@@ -31,35 +31,34 @@ interface PaginationProps {
     if (totalPages <= 1) return null;
   
     return (
-      <div className="flex justify-center mt-4 space-x-2">
+      <div className="flex justify-center mt-4 gap-2">
         <button
           onClick={() => onPageChange(Math.max(currentPage - 1, 1))}
-          className="text-white px-3 py-1 rounded hover:bg-gray-700"
+          className="px-3 py-1 rounded-md border border-white/10 text-white/90 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           Prev
         </button>
-  
+
         {getVisiblePages().map((page) => (
           <button
             key={page}
             onClick={() => onPageChange(page)}
-            className={`px-3 py-1 rounded ${
+            className={`px-3 py-1 rounded-md border transition-colors focus:outline-none focus:ring-2 focus:ring-indigo-500 ${
               page === currentPage
-                ? "bg-white text-black"
-                : "text-white hover:bg-gray-700"
+                ? "bg-indigo-600 border-indigo-500 text-white"
+                : "border-white/10 text-white/90 hover:bg-white/10"
             }`}
           >
             {page}
           </button>
         ))}
-  
+
         <button
           onClick={() => onPageChange(Math.min(currentPage + 1, totalPages))}
-          className="text-white px-3 py-1 rounded hover:bg-gray-700"
+          className="px-3 py-1 rounded-md border border-white/10 text-white/90 hover:bg-white/10 focus:outline-none focus:ring-2 focus:ring-indigo-500"
         >
           Next
         </button>
       </div>
     );
   }
-  
