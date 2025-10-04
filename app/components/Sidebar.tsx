@@ -4,7 +4,6 @@ import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useMemo, useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useSidebar } from "./ui/SidebarContext";
-import Image from "next/image";
 import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2, Users, Settings as SettingsIcon } from "lucide-react";
 
 const navItems = [
@@ -50,30 +49,8 @@ export default function Sidebar() {
     [items, query]
   );
 
-  const [modelPhotos, setModelPhotos] = useState<string[]>([]);
-  const [loadingModels, setLoadingModels] = useState<boolean>(false);
 
-  useEffect(() => {
-    const fetchModels = async () => {
-      try {
-        setLoadingModels(true);
-        const res = await fetch("/api/images/photos");
-        if (!res.ok) throw new Error("Failed to load models");
-        const data = await res.json();
-        setModelPhotos(Array.isArray(data.images) ? data.images : []);
-      } catch (_) {
-        setModelPhotos([]);
-      } finally {
-        setLoadingModels(false);
-      }
-    };
-    fetchModels();
-  }, []);
 
-  const filteredModels = useMemo(() => {
-    const q = query.toLowerCase();
-    return modelPhotos.filter((p) => p.replace(/\.[^.]+$/, "").toLowerCase().includes(q));
-  }, [modelPhotos, query]);
 
   const selectedCategoryHref = useMemo(() => {
     return pathname && pathname.startsWith("/category/") && items.some(i => i.href === pathname) ? pathname : "";
@@ -177,39 +154,6 @@ export default function Sidebar() {
             </div>
           </div>
 
-          <div>
-            <div className="px-3 mt-4 mb-2 text-xs uppercase tracking-wider text-white/50">Models</div>
-            <div className="px-2 pb-1">
-              {loadingModels ? (
-                <div className="text-xs text-white/60 px-1 py-1">Loading models...</div>
-              ) : filteredModels.length === 0 ? (
-                <div className="text-xs text-white/60 px-1 py-1">No models found</div>
-              ) : (
-                <ul className="grid grid-cols-3 gap-2 pr-2 max-h-56 overflow-y-auto scrollbar-hide">
-                  {filteredModels.map((photo) => {
-                    const name = photo.replace(/\.[^.]+$/, "");
-                    return (
-                      <li key={photo}>
-                        <button
-                          className="w-full flex flex-col items-center gap-1 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-                          onClick={() => {
-                            router.push(`/videos/${encodeURIComponent(name)}`);
-                            close();
-                          }}
-                          title={name}
-                        >
-                          <div className="relative w-14 h-14 rounded-full overflow-hidden border border-white/20 shadow">
-                            <Image src={`/photos/${photo}`} alt={name} fill className="object-cover" />
-                          </div>
-                          <span className="text-[10px] text-white/80 truncate w-full text-center">{name}</span>
-                        </button>
-                      </li>
-                    );
-                  })}
-                </ul>
-              )}
-            </div>
-          </div>
 
           <div className="pt-1 border-t border-white/10">
             <ul>
