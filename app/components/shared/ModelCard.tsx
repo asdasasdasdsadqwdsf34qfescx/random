@@ -9,8 +9,16 @@ interface ModelCardProps {
 
 export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick }: ModelCardProps) => (
   <div
-    className="group cursor-pointer bg-white rounded-xl shadow-sm hover:shadow-lg transition-all duration-300 overflow-hidden"
+    role="button"
+    tabIndex={0}
+    className="group cursor-pointer bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl shadow-sm hover:shadow-md transition-transform duration-300 overflow-hidden hover:-translate-y-0.5 focus:outline-none focus:ring-2 focus:ring-emerald-400"
     onClick={() => onPhotoClick(photo)}
+    onKeyDown={(e) => {
+      if (e.key === "Enter" || e.key === " ") {
+        e.preventDefault();
+        onPhotoClick(photo);
+      }
+    }}
     onMouseDown={(e) => {
       if (e.button === 1 && onMiddleClick) {
         e.preventDefault();
@@ -25,18 +33,12 @@ export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick }: Mode
         fill
         className="object-cover group-hover:scale-105 transition-transform duration-300"
       />
-      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors duration-300 flex items-center justify-center">
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-          <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14.828 14.828a4 4 0 01-5.656 0M9 10h1m4 0h1m-6 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-          </svg>
-        </div>
+      <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
+      <div className="absolute bottom-2 left-2 right-2 pointer-events-none">
+        <p className="text-sm font-medium text-white drop-shadow truncate">
+          {photo.replace(/\.[^.]+$/, "")}
+        </p>
       </div>
-    </div>
-    <div className="p-3">
-      <p className="text-sm font-medium text-gray-900 truncate">
-        {photo.replace(/\.[^.]+$/, "")}
-      </p>
     </div>
   </div>
 );
