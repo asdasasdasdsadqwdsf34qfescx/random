@@ -42,12 +42,14 @@ export default function CategoryPage() {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <main className={`px-4 sm:px-6 lg:px-8 py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
-        <MediaGallery
-          apiEndpoint={`/api/images/${encodeURIComponent(cfg.apiBasePath)}`}
-          videoFilter={cfg.videoFilter}
-          basePath={cfg.basePath}
-          title={cfg.title}
-        />
+        <div className="max-w-7xl mx-auto">
+          <MediaGallery
+            apiEndpoint={`/api/images/${encodeURIComponent(cfg.apiBasePath)}`}
+            videoFilter={cfg.videoFilter}
+            basePath={cfg.basePath}
+            title={cfg.title}
+          />
+        </div>
       </main>
     </div>
   );
