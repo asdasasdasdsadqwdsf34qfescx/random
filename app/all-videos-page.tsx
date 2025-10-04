@@ -23,7 +23,7 @@ const AllVideosPage = () => {
   }, []);
 
   return (
-    <div className="p-6">
+    <div className="py-6">
       <h1 className="text-2xl font-bold mb-6">Toate videourile</h1>
       {loading && <p>Loading...</p>}
       {!loading && allVideos.length === 0 && <p>Nu există videouri.</p>}
