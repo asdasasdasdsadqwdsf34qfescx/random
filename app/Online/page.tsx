@@ -84,22 +84,9 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
             className="w-full h-full object-cover"
           />
         )}
-        <span className="absolute top-2 left-2 inline-flex items-center gap-1 px-2 py-1 rounded-md text-xs font-medium bg-green-600 text-white">
-          <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" /> Live
-        </span>
       </div>
-      <div className="p-3 flex items-center justify-between gap-3">
+      <div className="p-3">
         <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate" title={model.name}>{model.name}</h3>
-        <div className="flex items-center gap-2 text-xs text-slate-500 dark:text-slate-400">
-          <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-            ⭐ {Math.round((model.averageRating ?? 0) * 10) / 10}
-          </span>
-          {typeof model.onlineCount === "number" && (
-            <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full border border-slate-200 dark:border-slate-700">
-              👤 {model.onlineCount}
-            </span>
-          )}
-        </div>
       </div>
     </article>
   );
@@ -111,7 +98,6 @@ const OnlinePage = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
-  const [sortBy, setSortBy] = useState<"name-asc" | "name-desc" | "rating-desc" | "rating-asc">("rating-desc");
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
@@ -151,18 +137,8 @@ const OnlinePage = () => {
     const q = query.trim().toLowerCase();
     let list = online;
     if (q) list = list.filter((m) => m.name.toLowerCase().includes(q));
-    switch (sortBy) {
-      case "name-asc":
-        return [...list].sort((a, b) => a.name.localeCompare(b.name));
-      case "name-desc":
-        return [...list].sort((a, b) => b.name.localeCompare(a.name));
-      case "rating-asc":
-        return [...list].sort((a, b) => (a.averageRating ?? 0) - (b.averageRating ?? 0));
-      case "rating-desc":
-      default:
-        return [...list].sort((a, b) => (b.averageRating ?? 0) - (a.averageRating ?? 0));
-    }
-  }, [online, query, sortBy]);
+    return list;
+  }, [online, query]);
 
   const handleAddModel = async () => {
     if (!newModelName.trim()) return;
@@ -194,17 +170,6 @@ const OnlinePage = () => {
                 placeholder="Search by name…"
                 className="w-56 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
               />
-              <select
-                value={sortBy}
-                onChange={(e) => setSortBy(e.target.value as any)}
-                className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
-                aria-label="Sort by"
-              >
-                <option value="rating-desc">Top rated</option>
-                <option value="rating-asc">Lowest rated</option>
-                <option value="name-asc">Name A–Z</option>
-                <option value="name-desc">Name Z–A</option>
-              </select>
               <button
                 onClick={fetchData}
                 className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
@@ -230,13 +195,13 @@ const OnlinePage = () => {
         )}
 
         {isLoading ? (
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {Array.from({ length: 10 }).map((_, i) => (
               <div key={i} className="aspect-video rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
             ))}
           </div>
         ) : filtered.length > 0 ? (
-          <section aria-label="Online models grid" className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+          <section aria-label="Online models grid" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
             {filtered.map((model) => (
               <OnlineModelCard key={model.name} model={model} />
             ))}
