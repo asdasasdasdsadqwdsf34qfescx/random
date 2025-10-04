@@ -3,7 +3,7 @@
 import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Sidebar from "../components/Sidebar";
 import { VideoModel } from "@/app/types";
-import { getOnlineModels } from "../ids";
+import { add, getOnlineModels } from "../ids";
 
 // Add model modal
 const AddModelModal = ({
@@ -99,6 +99,8 @@ const OnlinePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const [showAddModal, setShowAddModal] = useState(false);
+  const [newModelName, setNewModelName] = useState("");
 
   const fetchData = async () => {
     try {
@@ -138,6 +140,16 @@ const OnlinePage = () => {
     return list;
   }, [online, query]);
 
+  const handleAddModel = async () => {
+    if (!newModelName.trim()) return;
+    try {
+      await add(newModelName.trim());
+      setNewModelName("");
+      setShowAddModal(false);
+    } catch {
+      alert("Failed to add model");
+    }
+  };
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -159,12 +171,10 @@ const OnlinePage = () => {
                 className="w-56 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
               />
               <button
-                onClick={fetchData}
-                className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
-                aria-label="Refresh"
-                title="Refresh"
+                onClick={() => setShowAddModal(true)}
+                className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
               >
-                Refresh
+                Add model
               </button>
             </div>
           </div>
@@ -194,6 +204,17 @@ const OnlinePage = () => {
           </div>
         )}
       </main>
+
+      <AddModelModal
+        show={showAddModal}
+        onAdd={handleAddModel}
+        onCancel={() => {
+          setShowAddModal(false);
+          setNewModelName("");
+        }}
+        newModelName={newModelName}
+        setNewModelName={setNewModelName}
+      />
 
     </div>
   );
