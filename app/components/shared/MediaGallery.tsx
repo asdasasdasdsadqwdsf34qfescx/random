@@ -123,9 +123,9 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
   };
 
   return (
-    <div className="flex-1 flex flex-col">
+    <div className="flex-1 flex flex-col max-w-7xl mx-auto w-full">
       <div className="px-2 sm:px-0">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-4">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
           <h1 className="text-2xl font-semibold text-slate-900 dark:text-slate-100">{title}</h1>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative w-full sm:w-72">
@@ -152,7 +152,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
           </div>
         </div>
 
-        <div className="flex space-x-0 border-b border-slate-200 dark:border-slate-800">
+        <div className="flex space-x-0 border-b border-slate-200 dark:border-slate-800 mb-4">
           <TabButton
             label="Modele"
             isActive={activeTab === 'models'}
@@ -181,7 +181,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
             ) : photos.length === 0 ? (
               <EmptyState message="Nu au fost găsite modele" />
             ) : (
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {photos
                   .filter((photo) => {
                     const photoName = photo.replace(/\.[^.]+$/, "").toLowerCase();
@@ -229,8 +229,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
                     <div key={`${randomVideo.photo}-${randomVideo.video}-${index}`} className="text-center">
                       <VideoPlayer
                         src={`/videos/${randomVideo.photo.replace(/\.[^.]+$/, "")}/${randomVideo.video}`}
-                        className="w-full h-auto"
-                        style={{ maxHeight: '300px' }}
+                        className="w-full"
                       />
                       <p className="mt-2 text-sm text-gray-600 truncate">
                         {randomVideo.photo.replace(/\.[^.]+$/, "")}
@@ -265,7 +264,6 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
                         <VideoPlayer
                           src={`/videos/${selectedPhoto.replace(/\.[^.]+$/, "")}/${video}`}
                           className="w-full"
-                          style={{ height: '200px' }}
                         />
                         <p className="mt-2 text-sm text-slate-500 truncate">{video}</p>
                       </div>

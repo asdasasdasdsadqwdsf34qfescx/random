@@ -29,7 +29,7 @@ export const VideoPlayer = ({
           ref={videoRef}
           controls
           preload="metadata"
-          className={`absolute inset-0 w-full h-full object-cover ${isLoading ? "opacity-0" : "opacity-100"}`}
+          className={`absolute inset-0 w-full h-full object-contain bg-black ${isLoading ? "opacity-0" : "opacity-100"}`}
           src={src}
           title={title}
           onLoadedData={() => setIsLoading(false)}
