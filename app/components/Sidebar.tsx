@@ -1,10 +1,10 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useSidebar } from "./ui/SidebarContext";
-import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2 } from "lucide-react";
+import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2, Settings as SettingsIcon } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
@@ -36,8 +36,14 @@ const navItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { isOpen, toggle, close } = useSidebar();
+  const [query, setQuery] = useState("");
 
   const items = useMemo(() => navItems, []);
+  const mainItems = useMemo(() => items.filter(i => !i.href.startsWith("/category/")), [items]);
+  const categoryItems = useMemo(
+    () => items.filter(i => i.href.startsWith("/category/")).filter(i => i.label.toLowerCase().includes(query.toLowerCase())),
+    [items, query]
+  );
 
   return (
     <>
@@ -79,33 +85,76 @@ export default function Sidebar() {
             <input
               id="sidebar-search"
               type="search"
-              placeholder="Search..."
+              placeholder="Search categories..."
               className="w-full bg-white/5 border border-white/10 rounded-md pl-8 pr-3 py-1.5 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
-              onChange={() => {}}
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
             />
           </div>
         </div>
 
-        <nav className="h-[calc(100%-8rem)] overflow-y-auto scrollbar-hide px-2 py-3">
-          <ul className="space-y-1">
-            {items.map(({ href, label, icon: Icon }) => {
-              const active = pathname === href;
-              return (
-                <li key={href}>
-                  <Link
-                    href={href}
-                    className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent
-                    ${active ? "bg-indigo-600/90 text-white border-indigo-500/30" : "hover:bg-white/10"}`}
-                    onClick={close}
-                    title={label}
-                  >
-                    <Icon className="w-4.5 h-4.5 text-white/70 group-hover:text-white" />
-                    <span className="truncate">{label}</span>
-                  </Link>
-                </li>
-              );
-            })}
-          </ul>
+        <nav className="h-[calc(100%-8rem)] overflow-y-auto scrollbar-hide px-2 py-3 space-y-6">
+          <div>
+            <div className="px-3 mb-2 text-xs uppercase tracking-wider text-white/50">Main</div>
+            <ul className="space-y-1">
+              {mainItems.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent
+                      ${active ? "bg-indigo-600/90 text-white border-indigo-500/30" : "hover:bg-white/10"}`}
+                      onClick={close}
+                      title={label}
+                    >
+                      <Icon className="w-4.5 h-4.5 text-white/70 group-hover:text-white" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div>
+            <div className="px-3 mb-2 text-xs uppercase tracking-wider text-white/50">Categories</div>
+            <ul className="space-y-1">
+              {categoryItems.map(({ href, label, icon: Icon }) => {
+                const active = pathname === href;
+                return (
+                  <li key={href}>
+                    <Link
+                      href={href}
+                      className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none focus:ring-2 focus:ring-indigo-500 border border-transparent
+                      ${active ? "bg-indigo-600/90 text-white border-indigo-500/30" : "hover:bg-white/10"}`}
+                      onClick={close}
+                      title={label}
+                    >
+                      <Icon className="w-4.5 h-4.5 text-white/70 group-hover:text-white" />
+                      <span className="truncate">{label}</span>
+                    </Link>
+                  </li>
+                );
+              })}
+            </ul>
+          </div>
+
+          <div className="pt-1 border-t border-white/10">
+            <ul>
+              <li>
+                <Link
+                  href="/settings"
+                  className={`group flex items-center gap-3 px-3 py-2 rounded-md transition-colors outline-none focus:ring-2 focus:ring-indigo-500 hover:bg-white/10`}
+                  onClick={close}
+                  title="Settings"
+                >
+                  <SettingsIcon className="w-4.5 h-4.5 text-white/70 group-hover:text-white" />
+                  <span className="truncate">Settings</span>
+                </Link>
+              </li>
+            </ul>
+          </div>
         </nav>
       </aside>
     </>
