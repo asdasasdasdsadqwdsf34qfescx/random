@@ -5,11 +5,12 @@ import { useEffect, useMemo, useState } from "react";
 import { HiMenu, HiX } from "react-icons/hi";
 import { useSidebar } from "./ui/SidebarContext";
 import Image from "next/image";
-import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2, Settings as SettingsIcon } from "lucide-react";
+import { Home, Images, Video, Heart, Star, Fingerprint, Rocket, BadgeInfo, Search, Grid2X2, Users, Settings as SettingsIcon } from "lucide-react";
 
 const navItems = [
   { href: "/", label: "Home", icon: Home },
   { href: "/Online", label: "Online Models", icon: Rocket },
+  { href: "/models", label: "Models", icon: Users },
   { href: "/category/photos", label: "GF Models", icon: Images },
   { href: "/category/boobs", label: "Boobs", icon: Heart },
   { href: "/category/kiss", label: "Kiss", icon: Heart },
