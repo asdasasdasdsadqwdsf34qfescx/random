@@ -46,7 +46,7 @@ export default function VideoPage() {
   return (
     <div className="relative">
       <Sidebar />
-      <main className="ml-0 md:ml-64 p-4 md:p-8">
+      <section className="ml-0 md:ml-64 p-4 md:p-8">
         <h1 className="sr-only">Latest Videos</h1>
         {error && (
           <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
@@ -78,7 +78,7 @@ export default function VideoPage() {
             onPageChange={setCurrentPage}
           />
         </div>
-      </main>
+      </section>
     </div>
   );
 }
