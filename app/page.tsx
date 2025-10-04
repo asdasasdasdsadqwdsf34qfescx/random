@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import Sidebar from "./components/Sidebar";
 import Pagination from "./components/Pagination";
 import VideoCard from "./components/VideoCard";
-import { getVideosPaths } from "./api";
+import { getVideosPaths } from "@/lib/clientApi";
 
 interface VideoPath { path: string }
 interface VideoResponse { videos: VideoPath[]; total: number }
