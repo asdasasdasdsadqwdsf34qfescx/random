@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { VideoPlayer } from "./components/shared/VideoPlayer";
 
 const AllVideosPage = () => {
   const [allVideos, setAllVideos] = useState<{ model: string; video: string }[]>([]);
@@ -30,22 +31,12 @@ const AllVideosPage = () => {
         {allVideos.map((item, idx) => (
           <div key={idx} className="rounded shadow bg-black/80 p-2 flex flex-col items-center">
             <div className="mb-2 text-emerald-400 font-semibold">{item.model}</div>
-            <video
-              controls
-              className="w-full max-w-full rounded shadow bg-black/80"
+            <VideoPlayer
+              className="w-full max-w-full bg-black/80"
               style={{ height: '300px', width: '100%' }}
               src={`/videos/${item.model}/${item.video}`}
             />
             <div className="text-xs text-gray-400 mt-2">{item.video}</div>
-            <button
-              className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-              onClick={() => {
-                const url = `/videos/${item.model}/${item.video}`;
-                window.open(url, '_blank');
-              }}
-            >
-              Deschide în alt tab
-            </button>
           </div>
         ))}
       </div>

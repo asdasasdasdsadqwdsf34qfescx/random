@@ -3,9 +3,10 @@ import { useEffect, useRef, useState } from "react";
 
 interface VideoCardProps {
   src: string;
+  title?: string;
 }
 
-export default function VideoCard({ src }: VideoCardProps) {
+export default function VideoCard({ src, title }: VideoCardProps) {
   const [inView, setInView] = useState(false);
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -19,7 +20,7 @@ export default function VideoCard({ src }: VideoCardProps) {
           obs.disconnect();
         }
       },
-      { rootMargin: "200px" }
+      { rootMargin: "200px", threshold: 0.01 }
     );
     obs.observe(node);
     return () => obs.disconnect();
@@ -32,12 +33,15 @@ export default function VideoCard({ src }: VideoCardProps) {
           src={src}
           preload="metadata"
           controls
+          muted
+          playsInline
           className="w-full h-64 object-cover bg-black"
           controlsList="nodownload noremoteplayback"
           disablePictureInPicture
+          aria-label={title}
         />
       ) : (
-        <div className="w-full h-64 bg-gray-700 animate-pulse" />
+        <div className="w-full h-64 bg-gray-700 animate-pulse" aria-hidden />
       )}
     </div>
   );

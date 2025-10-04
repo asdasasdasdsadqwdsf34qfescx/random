@@ -1,6 +1,7 @@
 "use client";
 import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
+import { VideoPlayer } from "@/app/components/shared/VideoPlayer";
 
 const ModelVideosPage = () => {
   const params = useParams();
@@ -34,22 +35,12 @@ const ModelVideosPage = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {videos.map((video, idx) => (
           <div key={idx} className="rounded shadow bg-black/80 p-2 flex flex-col items-center">
-            <video
-              controls
-              className="w-full max-w-full rounded shadow bg-black/80"
+            <VideoPlayer
+              className="w-full max-w-full bg-black/80"
               style={{ height: '300px', width: '100%' }}
               src={`/videos/${model}/${video}`}
             />
             <div className="text-xs text-gray-400 mt-2">{video}</div>
-            <button
-              className="mt-2 px-3 py-1 bg-blue-600 hover:bg-blue-700 text-white rounded text-xs"
-              onClick={() => {
-                const url = `/videos/${model}/${video}`;
-                window.open(url, '_blank');
-              }}
-            >
-              Deschide în alt tab
-            </button>
           </div>
         ))}
       </div>

@@ -5,30 +5,65 @@ import Pagination from "./components/Pagination";
 import VideoCard from "./components/VideoCard";
 import { getVideosPaths } from "./api";
 
+interface VideoPath { path: string }
+interface VideoResponse { videos: VideoPath[]; total: number }
+
 export default function VideoPage() {
-  const [paths, setPaths] = useState<any[]>([]);
+  const [paths, setPaths] = useState<VideoPath[]>([]);
   const [currentPage, setCurrentPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
   const itemsPerPage = 6;
 
   useEffect(() => {
+    let cancelled = false;
     const fetchData = async () => {
-      const data = await getVideosPaths(currentPage, itemsPerPage);
-      setPaths(data.videos || []);
-      setTotal(data.total || 0);
+      try {
+        setLoading(true);
+        setError(null);
+        const data = (await getVideosPaths(currentPage, itemsPerPage)) as VideoResponse;
+        if (!cancelled) {
+          setPaths(data.videos || []);
+          setTotal(data.total || 0);
+        }
+      } catch (e) {
+        if (!cancelled) {
+          setError("Failed to load videos");
+          setPaths([]);
+          setTotal(0);
+        }
+      } finally {
+        if (!cancelled) setLoading(false);
+      }
     };
     fetchData();
+    return () => {
+      cancelled = true;
+    };
   }, [currentPage]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 to-black relative">
+    <div className="relative">
       <Sidebar />
-      <main className="ml-0 md:ml-64 p-4 md:p-8">
+      <section className="ml-0 md:ml-64 p-4 md:p-8">
+        <h1 className="sr-only">Latest Videos</h1>
+        {error && (
+          <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">
+            {error}
+          </div>
+        )}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 md:gap-8">
-          {paths.map((path, idx) => (
-            <VideoCard key={idx} src={"/videos/" + path.path} />
-          ))}
-          {paths.length === 0 && (
+          {loading
+            ? Array.from({ length: itemsPerPage }).map((_, i) => (
+                <div key={i} className="bg-gray-800/80 rounded-xl shadow-xl overflow-hidden border border-white/10">
+                  <div className="w-full h-64 bg-gray-700 animate-pulse" />
+                </div>
+              ))
+            : paths.map((path, idx) => (
+                <VideoCard key={idx} src={"/videos/" + path.path} />
+              ))}
+          {!loading && paths.length === 0 && (
             <div className="text-white/80 text-lg col-span-full text-center py-12">
               No videos found.
             </div>
@@ -43,7 +78,7 @@ export default function VideoPage() {
             onPageChange={setCurrentPage}
           />
         </div>
-      </main>
+      </section>
     </div>
   );
 }
