@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Sidebar from "../components/Sidebar";
+import { useSidebar } from "../components/ui/SidebarContext";
 import { VideoModel } from "@/app/types";
 import { add, getOnlineModels } from "../ids";
 
@@ -99,6 +100,7 @@ const OnlinePage = () => {
   const [error, setError] = useState<string | null>(null);
   const [query, setQuery] = useState("");
   const [lastUpdated, setLastUpdated] = useState<Date | null>(null);
+  const { isOpen } = useSidebar();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
 
@@ -154,7 +156,7 @@ const OnlinePage = () => {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-      <main className="px-4 sm:px-6 lg:px-8 py-6 md:ml-64">
+      <main className={`px-4 sm:px-6 lg:px-8 py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <h1 className="text-2xl font-semibold">Online Models</h1>
