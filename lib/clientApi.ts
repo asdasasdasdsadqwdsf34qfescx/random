@@ -12,7 +12,6 @@ export async function getModels() {
 }
 
 export async function deleteModel(id: number) {
-  // Use the id as a path parameter
   const url = new URL(`http://localhost:3001/model/${id}`);
 
   const response = await fetch(url, {
@@ -27,8 +26,6 @@ export async function deleteModel(id: number) {
   }
   return response.json();
 }
-
-// ./api/index.ts
 
 export async function getVideosPaths(page = 1, pageSize = 6) {
   const url = new URL(`http://localhost:3001/vids`);
@@ -46,7 +43,5 @@ export async function getVideosPaths(page = 1, pageSize = 6) {
     throw new Error(`Failed to get videos paths. Status: ${response.status}`);
   }
 
-  return await response.json(); // Expected: { videos: [...], total: 123 }
+  return await response.json();
 }
- 
-
