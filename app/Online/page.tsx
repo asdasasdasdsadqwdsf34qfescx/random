@@ -157,7 +157,7 @@ const OnlinePage = () => {
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
       <main className={`py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
-        <div className="max-w-7xl mx-auto">
+        <div className="w-full">
         <header className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between mb-6">
           <div>
             <h1 className="text-2xl font-semibold">Online Models</h1>
