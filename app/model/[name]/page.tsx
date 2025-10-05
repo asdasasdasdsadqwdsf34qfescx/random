@@ -96,6 +96,7 @@ export default function ModelDetailPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [selectVideoTag, setSelectVideoTag] = useState<string>("");
   const [selectTag, setSelectTag] = useState<string>("");
+  const [videoFilter, setVideoFilter] = useState<string>("");
 
   const modelNames: ModelName[] = useMemo(
     () => data?.modelData?.modelNames || data?.modelData?.modelNamesData || [],
@@ -137,7 +138,7 @@ export default function ModelDetailPage() {
       if (!name) return;
       setVidLoading(true);
       try {
-        const r = await fetch(`/api/videos?name=${encodeURIComponent(name)}`);
+        const r = await fetch(`/api/videos?name=${encodeURIComponent(name)}${videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""}`);
         if (!r.ok) throw new Error("Failed to load videos");
         const j = await r.json();
         setVideos(j?.videos || []);
@@ -148,7 +149,7 @@ export default function ModelDetailPage() {
       }
     };
     run();
-  }, [name]);
+  }, [name, videoFilter]);
 
   const resetFormFromModel = () => {
     const m = model;
@@ -312,7 +313,7 @@ export default function ModelDetailPage() {
     try {
       const [d, v] = await Promise.all([
         fetch(`/api/model/data/${encodeURIComponent(name)}`).then((r) => r.json()),
-        fetch(`/api/videos?name=${encodeURIComponent(name)}`).then((r) => r.json()),
+        fetch(`/api/videos?name=${encodeURIComponent(name)}${videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""}`).then((r) => r.json()),
       ]);
       setData(d);
       const m = d?.modelData?.model as Model | undefined;
@@ -391,6 +392,46 @@ export default function ModelDetailPage() {
             <div className="text-sm text-slate-600">Model not found.</div>
           ) : (
             <div className="space-y-6">
+              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                <div className="flex items-center gap-4">
+                  <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xl font-semibold text-slate-700 dark:text-slate-200">
+                    {imageUrl ? (
+                      <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                    ) : (
+                      (name?.charAt(0)?.toUpperCase() || "?")
+                    )}
+                  </div>
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 flex-wrap">
+                      <h2 className="text-xl font-semibold">{name}</h2>
+                      {isOnline ? (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">Online</span>
+                      ) : (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">Offline</span>
+                      )}
+                    </div>
+                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                      {startedAt && <span>Started: {startedAt}</span>}
+                      <span>Videos: {videos.length}</span>
+                    </div>
+                  </div>
+                  <div>
+                    <button
+                      onClick={() => {
+                        if (editMode) {
+                          resetFormFromModel();
+                          setEditMode(false);
+                        } else {
+                          setEditMode(true);
+                        }
+                      }}
+                      className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500"
+                    >
+                      {editMode ? "Cancel" : "Edit"}
+                    </button>
+                  </div>
+                </div>
+              </section>
               {/* Model data */}
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
@@ -450,7 +491,7 @@ export default function ModelDetailPage() {
                         <select
                           value={selectVideoTag}
                           onChange={(e) => setSelectVideoTag(e.target.value)}
-                          className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                          className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
                         >
                           <option value="">Select tag</option>
                           {ALLOWED_VIDEO_TAGS.filter((t) => !videoTags.includes(t)).map((t) => (
@@ -472,10 +513,10 @@ export default function ModelDetailPage() {
                     ) : null}
                     <div className="flex flex-wrap gap-2">
                       {videoTags.map((t, i) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
+                        <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
                           {t}
                           {editMode && (
-                            <button type="button" onClick={() => removeArrayItem(i, videoTags, setVideoTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, videoTags, setVideoTags); }} className="text-slate-500 hover:text-slate-800">×</button>
                           )}
                         </span>
                       ))}
@@ -488,7 +529,7 @@ export default function ModelDetailPage() {
                         <select
                           value={selectTag}
                           onChange={(e) => setSelectTag(e.target.value)}
-                          className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                          className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
                         >
                           <option value="">Select tag</option>
                           {ALLOWED_TAGS.filter((t) => !tags.includes(t)).map((t) => (
@@ -510,10 +551,10 @@ export default function ModelDetailPage() {
                     ) : null}
                     <div className="flex flex-wrap gap-2">
                       {tags.map((t, i) => (
-                        <span key={`${t}-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
+                        <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
                           {t}
                           {editMode && (
-                            <button type="button" onClick={() => removeArrayItem(i, tags, setTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                            <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, tags, setTags); }} className="text-slate-500 hover:text-slate-800">×</button>
                           )}
                         </span>
                       ))}
@@ -587,6 +628,12 @@ export default function ModelDetailPage() {
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Videos ({videos.length})</h2>
+                  {videoFilter && (
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-slate-600 dark:text-slate-400">Filter: {videoFilter}</span>
+                      <button onClick={() => setVideoFilter("")} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Clear</button>
+                    </div>
+                  )}
                 </div>
                 {vidLoading ? (
                   <div className="text-sm text-slate-500">Loading...</div>
@@ -594,10 +641,13 @@ export default function ModelDetailPage() {
                   <div className="text-sm text-slate-600">No videos for this model.</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((video, idx) => (
-                      <div key={`${video}-${idx}`} className="rounded shadow bg-black/80 p-2 flex flex-col items-center">
-                        <VideoPlayer className="w-full max-w-full bg-black/80" style={{ height: "300px", width: "100%" }} src={`/videos/${encodeURIComponent(name)}/${video}`} />
-                        <div className="text-xs text-gray-400 mt-2 break-all">{video}</div>
+                    {videos.map((video) => (
+                      <div key={video}>
+                        <VideoPlayer
+                          src={`/videos/${encodeURIComponent(name)}/${video}`}
+                          className="w-full"
+                        />
+                        <p className="mt-2 text-sm text-slate-500 truncate">{video}</p>
                       </div>
                     ))}
                   </div>
