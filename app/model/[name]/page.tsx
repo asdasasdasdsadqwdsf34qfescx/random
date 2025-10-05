@@ -418,7 +418,7 @@ export default function ModelDetailPage() {
             <div className="space-y-6">
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xl font-semibold text-slate-700 dark:text-slate-200">
+                  <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
                     {avatarSrc ? (
                       <img src={avatarSrc} alt={name} className="w-full h-full object-cover" />
                     ) : (
@@ -438,8 +438,7 @@ export default function ModelDetailPage() {
                       )}
                     </div>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
-                      {startedAt && <span>Started: {startedAt}</span>}
-                      <span>Videos: {videos.length}</span>
+                                            <span>Videos: {videos.length}</span>
                     </div>
                     {modelNames.length > 0 && (
                       <div className="mt-2 flex flex-wrap gap-2">
