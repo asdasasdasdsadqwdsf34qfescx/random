@@ -17,7 +17,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     const idNum = Number(id);
     if (!Number.isFinite(idNum)) return NextResponse.json({ statusCode: 400, message: "Invalid id", error: "Bad Request" }, { status: 400 });
     const body = await req.json().catch(() => ({}));
-    const remote = await callRemote(`/models/${idNum}`, {
+    const remote = await callRemote(`/model/${idNum}`, {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body)
