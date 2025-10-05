@@ -218,6 +218,39 @@ const ModelsPage = () => {
           <div className="mt-6">
             {loading ? (
               <LoadingSpinner />
+            ) : (selectedVideoTags.length || selectedTags.length || onlineOnly) ? (
+              (() => {
+                const apiNames = Object.keys(itemsByName);
+                if (apiNames.length === 0) return <EmptyState message="No models found" />;
+                const cards = apiNames
+                  .map((name) => {
+                    const tags = tagsByName[name] || [];
+                    const checked = !!checkedByName[name];
+                    const localPhoto = photos.find((p) => p.replace(/\.[^.]+$/, "") === name);
+                    const model = itemsByName[name] || {};
+                    const imageSrc = localPhoto ? undefined : (model?.imageUrl || undefined);
+                    const label = name;
+                    if (!localPhoto && !imageSrc) return null;
+                    return (
+                      <ModelCard
+                        key={label}
+                        name={label}
+                        photo={localPhoto}
+                        basePath="photos"
+                        imageSrc={imageSrc}
+                        tags={tags}
+                        checked={checked}
+                        onPhotoClick={() => router.push(`/model/${encodeURIComponent(label)}`)}
+                        onMiddleClick={() => window.open(`/model/${encodeURIComponent(label)}`, "_blank")}
+                      />
+                    );
+                  })
+                  .filter(Boolean);
+                if (cards.length === 0) return <EmptyState message="No models found" />;
+                return (
+                  <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">{cards}</div>
+                );
+              })()
             ) : filtered.length === 0 ? (
               <EmptyState message="No models found" />
             ) : (
