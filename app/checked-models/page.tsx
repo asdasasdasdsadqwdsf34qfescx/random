@@ -197,6 +197,66 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
     setModelId(String(m.id));
   };
 
+  // Names management (only in edit mode)
+  const checkedId = item?.id;
+  const { data: namesData, isLoading: namesLoading, error: namesError, mutate: mutateNames } = useSWR<ModelNameItem[]>(mode === "edit" && checkedId ? `/api/model-names/by-checked-model/${checkedId}` : null, fetcher, { revalidateOnFocus: false });
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [busyIds, setBusyIds] = useState<Record<string, boolean>>({});
+
+  const addName = async () => {
+    const val = newName.trim();
+    if (!val || !checkedId) return;
+    try {
+      setBusyIds((b) => ({ ...b, add: true }));
+      const r = await fetch(`/api/model-names`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: val, modelId: checkedId }) });
+      if (!r.ok) throw new Error("add failed");
+      setNewName("");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not add name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, add: false }));
+    }
+  };
+
+  const startEdit = (n: ModelNameItem) => {
+    setEditingId(n.id);
+    setEditingValue(n.name);
+  };
+  const cancelEdit = () => { setEditingId(null); setEditingValue(""); };
+  const saveEdit = async (id: number) => {
+    try {
+      setBusyIds((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editingValue.trim() }) });
+      if (!r.ok) throw new Error("edit failed");
+      setEditingId(null);
+      setEditingValue("");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not save name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, [id]: false }));
+    }
+  };
+  const deleteName = async (id: number) => {
+    if (!confirm("Delete this name?")) return;
+    try {
+      setBusyIds((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("delete failed");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not delete name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, [id]: false }));
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
@@ -277,6 +337,42 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
             <input id="hasContent" type="checkbox" checked={hasContent} onChange={(e) => setHasContent(e.target.checked)} />
             <label htmlFor="hasContent" className="text-sm">Has content</label>
           </div>
+
+          {mode === "edit" && (
+            <div className="rounded-md border border-white/10 p-3 space-y-3">
+              <div className="font-medium">Names</div>
+              {namesLoading ? (
+                <div className="text-sm text-white/60">Loading...</div>
+              ) : namesError ? (
+                <div className="text-sm text-red-300">Could not load names.</div>
+              ) : (
+                <div className="space-y-2">
+                  {(namesData || []).map((n) => (
+                    <div key={n.id} className="flex items-center gap-2">
+                      {editingId === n.id ? (
+                        <>
+                          <input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                          <button type="button" onClick={() => saveEdit(n.id)} disabled={!!busyIds[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
+                          <button type="button" onClick={cancelEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex-1 text-sm">{n.name}</div>
+                          <button type="button" onClick={() => startEdit(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+                          <button type="button" onClick={() => deleteName(n.id)} disabled={!!busyIds[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2 pt-2">
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                <button type="button" onClick={addName} disabled={!newName.trim() || !!busyIds.add} className="px-3 py-1.5 text-xs rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-2 pt-2">
             <button type="button" onClick={onClose} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Cancel</button>
             <button disabled={!valid || saving} className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">{saving ? "Saving..." : "Save"}</button>
