@@ -31,7 +31,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
       setLoadingPhotos(true);
       try {
         const res = await fetch(apiEndpoint);
-        if (!res.ok) throw new Error("Nu s-au putut încărca pozele");
+        if (!res.ok) throw new Error("Could not load photos");
         const data = await res.json();
         setPhotos(data.images ?? []);
       } catch (err) {
@@ -50,7 +50,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
     try {
       const name = photo.replace(/\.[^.]+$/, "");
       const res = await fetch(`/api/videos?name=${encodeURIComponent(name)}&filter=${videoFilter}`);
-      if (!res.ok) throw new Error("Nu s-au putut încărca videourile");
+      if (!res.ok) throw new Error("Could not load videos");
       const data = await res.json();
       setVideos((data.videos ?? []).filter((v: string) => v.toLowerCase().includes(videoFilter)));
     } catch (err) {
@@ -136,7 +136,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
               </div>
               <input
                 type="text"
-                placeholder="Caută modele..."
+                placeholder="Search models..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="block w-full pl-10 pr-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 placeholder:text-slate-500"
@@ -154,7 +154,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
 
         <div className="flex space-x-0 border-b border-slate-200 dark:border-slate-800 mb-4">
           <TabButton
-            label="Modele"
+            label="Models"
             isActive={activeTab === 'models'}
             onClick={() => {
               setActiveTab('models');
@@ -163,7 +163,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
             }}
           />
           <TabButton
-            label="Videoclipuri"
+            label="Videos"
             isActive={activeTab === 'videos'}
             onClick={() => setActiveTab('videos')}
           />
@@ -179,7 +179,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
             {loadingPhotos ? (
               <LoadingSpinner />
             ) : photos.length === 0 ? (
-              <EmptyState message="Nu au fost găsite modele" />
+              <EmptyState message="No models found" />
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-5 gap-6">
                 {photos
@@ -256,7 +256,7 @@ export const MediaGallery = ({ apiEndpoint, videoFilter, basePath, title }: Medi
                 {loadingVideos ? (
                   <LoadingSpinner />
                 ) : videos.length === 0 ? (
-                  <EmptyState message="Nu au fost găsite videoclipuri pentru acest model" />
+                  <EmptyState message="No videos found for this model" />
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {videos.map((video) => (
