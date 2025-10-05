@@ -65,8 +65,8 @@ const ModelsPage = () => {
   useEffect(() => {
     // sync URL
     const qs = new URLSearchParams();
-    if (selectedVideoTags.length) qs.set("videoTags", selectedVideoTags.join(","));
-    if (selectedTags.length) qs.set("tags", selectedTags.join(","));
+    selectedVideoTags.forEach((v) => qs.append("videoTags", v));
+    selectedTags.forEach((t) => qs.append("tags", t));
     if (onlineOnly) qs.set("isOnline", "true");
     const query = qs.toString();
     const url = query ? `${pathname}?${query}` : pathname;
@@ -91,9 +91,13 @@ const ModelsPage = () => {
             const cm = Array.isArray(it?.modelData?.checkedModel) ? it.modelData.checkedModel : [];
             nextChecked[name] = cm.length > 0;
             const model = it?.modelData?.model || {};
+            const topLevelTags: string[] = Array.isArray(it?.modelData?.tags) ? it.modelData.tags : [];
+            const topLevelVideoTags: string[] = Array.isArray(it?.modelData?.videoTags) ? it.modelData.videoTags : [];
             const tagsArr: string[] = [
               ...((model?.tags || []) as string[]),
               ...((model?.videoTags || []) as string[]),
+              ...topLevelTags,
+              ...topLevelVideoTags,
             ].filter((s) => typeof s === "string");
             if (tagsArr.length) nextTags[name] = Array.from(new Set(tagsArr));
             nextItems[name] = model;
