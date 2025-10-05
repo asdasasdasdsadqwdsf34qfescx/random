@@ -35,6 +35,49 @@ const ModelsPage = () => {
     fetchPhotos();
   }, []);
 
+  useEffect(() => {
+    const fetchCheckedAndTags = async () => {
+      try {
+        // Prefer batch data for efficiency
+        const r = await fetch("/api/models/data");
+        if (r.ok) {
+          const j = await r.json();
+          const items: any[] = Array.isArray(j?.items) ? j.items : [];
+          const nextChecked: Record<string, boolean> = {};
+          const nextTags: Record<string, string[]> = {};
+          for (const it of items) {
+            const name: string = String(it?.name || it?.modelData?.model?.name || "");
+            if (!name) continue;
+            const lower = name.toLowerCase();
+            const cm = Array.isArray(it?.modelData?.checkedModel) ? it.modelData.checkedModel : [];
+            nextChecked[name] = cm.length > 0;
+            const tags: string[] = [
+              ...((it?.modelData?.model?.tags || []) as string[]),
+              ...((it?.modelData?.model?.videoTags || []) as string[]),
+            ].filter((s) => typeof s === "string");
+            if (tags.length) nextTags[name] = Array.from(new Set(tags));
+          }
+          setCheckedByName(nextChecked);
+          setTagsByName(nextTags);
+          return;
+        }
+      } catch {}
+
+      // Fallback: minimal checked flag via /api/checked-models
+      try {
+        const r2 = await fetch("/api/checked-models");
+        if (!r2.ok) return;
+        const j2 = await r2.json();
+        const next: Record<string, boolean> = {};
+        (Array.isArray(j2) ? j2 : []).forEach((it: any) => {
+          if (it?.name) next[String(it.name).replace(/\.[^.]+$/, "")] = true;
+        });
+        setCheckedByName(next);
+      } catch {}
+    };
+    fetchCheckedAndTags();
+  }, []);
+
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
     const arr = photos.slice().sort((a, b) => a.localeCompare(b));
