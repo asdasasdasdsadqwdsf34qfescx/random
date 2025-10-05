@@ -181,7 +181,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const { addToast } = useToast();
   type ModelOption = { id: number; name: string };
   const [modelSearch, setModelSearch] = useState("");
-  const { data: allModels, isLoading: modelsLoading, error: modelsError } = useSWR<ModelOption[]>(mode === "create" ? "/api/models" : null, fetcher, { revalidateOnFocus: false });
+  const { data: allModels, isLoading: modelsLoading, error: modelsError } = useSWR<ModelOption[]>(mode === "create" ? "/api/checked-models/available-models" : null, fetcher, { revalidateOnFocus: false });
   useEffect(() => { if (modelsError) addToast("Nu s-a putut încărca lista de modele.", "error"); }, [modelsError, addToast]);
   const filteredModels = useMemo(() => {
     const term = modelSearch.trim().toLowerCase();
