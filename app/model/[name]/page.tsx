@@ -96,6 +96,7 @@ export default function ModelDetailPage() {
   const [tags, setTags] = useState<string[]>([]);
   const [selectVideoTag, setSelectVideoTag] = useState<string>("");
   const [selectTag, setSelectTag] = useState<string>("");
+  const [avatarSrc, setAvatarSrc] = useState<string>("");
   const [videoFilter, setVideoFilter] = useState<string>("");
 
   const modelNames: ModelName[] = useMemo(
@@ -106,6 +107,28 @@ export default function ModelDetailPage() {
     () => (data?.modelData?.checkedModel || [])[0],
     [data]
   );
+
+  // Load avatar from public/photos matching model name or any model name alias
+  useEffect(() => {
+    const loadAvatar = async () => {
+      try {
+        const res = await fetch(`/api/images/photos`);
+        if (!res.ok) return;
+        const j = await res.json();
+        const imgs: string[] = j?.images || [];
+        const candidates = [name, ...modelNames.map((n) => n.name)].map((s) => s.toLowerCase());
+        const match = imgs.find((img: string) => {
+          const base = img.replace(/\.[^.]+$/, "").toLowerCase();
+          return candidates.includes(base);
+        });
+        if (match) setAvatarSrc(`/photos/${match}`);
+        else setAvatarSrc("");
+      } catch {
+        setAvatarSrc("");
+      }
+    };
+    if (name) loadAvatar();
+  }, [name, modelNames]);
 
   useEffect(() => {
     const run = async () => {
@@ -395,8 +418,8 @@ export default function ModelDetailPage() {
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center gap-4">
                   <div className="w-20 h-20 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-xl font-semibold text-slate-700 dark:text-slate-200">
-                    {imageUrl ? (
-                      <img src={imageUrl} alt={name} className="w-full h-full object-cover" />
+                    {avatarSrc ? (
+                      <img src={avatarSrc} alt={name} className="w-full h-full object-cover" />
                     ) : (
                       (name?.charAt(0)?.toUpperCase() || "?")
                     )}
@@ -409,84 +432,62 @@ export default function ModelDetailPage() {
                       ) : (
                         <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">Offline</span>
                       )}
+                      {checkedModel?.hasContent && (
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">hasContent</span>
+                      )}
                     </div>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
                       {startedAt && <span>Started: {startedAt}</span>}
                       <span>Videos: {videos.length}</span>
                     </div>
-                  </div>
-                  <div>
-                    <button
-                      onClick={() => {
-                        if (editMode) {
-                          resetFormFromModel();
-                          setEditMode(false);
-                        } else {
-                          setEditMode(true);
-                        }
-                      }}
-                      className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500"
-                    >
-                      {editMode ? "Cancel" : "Edit"}
-                    </button>
+                    {modelNames.length > 0 && (
+                      <div className="mt-2 flex flex-wrap gap-2">
+                        {modelNames.map((n) => (
+                          <span key={n.id} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
+                            {n.name}
+                          </span>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
               </section>
-              {/* Model data */}
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Model data</h2>
-                  {editMode && (
+              {/* Model data (hidden unless editing) */}
+              {editMode && (
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold">Model data</h2>
                     <button onClick={saveModel} disabled={savingModel || !model?.id} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
                       {savingModel ? "Saving..." : "Save"}
                     </button>
-                  )}
-                </div>
-
-                {!editMode ? (
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {filteredModelEntries.length === 0 ? (
-                      <div className="text-sm text-slate-600">No data.</div>
-                    ) : (
-                      filteredModelEntries.map(([k, v]) => (
-                        <div key={k}>
-                          <div className="text-xs text-slate-500">{k}</div>
-                          <div className="text-sm break-words">{k === "startedAt" && typeof v === "string" ? toLocalDateTime(v) : prettyValue(v)}</div>
-                        </div>
-                      ))
-                    )}
                   </div>
-                ) : (
-                  <>
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div>
-                        <div className="text-xs text-slate-500">ID</div>
-                        <div className="text-sm">{model?.id}</div>
-                      </div>
-                      <div>
-                        <div className="text-xs text-slate-500">Name</div>
-                        <div className="text-sm">{model?.name}</div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <input id="m-online" type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
-                        <label htmlFor="m-online" className="text-sm">Is online</label>
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Image URL</label>
-                        <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                      </div>
-                      <div>
-                        <label className="block text-sm mb-1">Started at</label>
-                        <input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                      </div>
-                    </div>
-                  </>
-                )}
 
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                  <div>
-                    <div className="text-sm font-medium mb-2">Video tags</div>
-                    {editMode ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <div className="text-xs text-slate-500">ID</div>
+                      <div className="text-sm">{model?.id}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500">Name</div>
+                      <div className="text-sm">{model?.name}</div>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <input id="m-online" type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
+                      <label htmlFor="m-online" className="text-sm">Is online</label>
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1">Image URL</label>
+                      <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1">Started at</label>
+                      <input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
+                    <div>
+                      <div className="text-sm font-medium mb-2">Video tags</div>
                       <div className="flex items-center gap-2 mb-2">
                         <select
                           value={selectVideoTag}
@@ -510,21 +511,19 @@ export default function ModelDetailPage() {
                           Add
                         </button>
                       </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2">
-                      {videoTags.map((t, i) => (
-                        <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
-                          {t}
-                          {editMode && (
-                            <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, videoTags, setVideoTags); }} className="text-slate-500 hover:text-slate-800">×</button>
-                          )}
-                        </span>
-                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        {videoTags.map((t, i) => (
+                          <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
+                            {t}
+                            {editMode && (
+                              <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, videoTags, setVideoTags); }} className="text-slate-500 hover:text-slate-800">×</button>
+                            )}
+                          </span>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div>
-                    <div className="text-sm font-medium mb-2">Tags</div>
-                    {editMode ? (
+                    <div>
+                      <div className="text-sm font-medium mb-2">Tags</div>
                       <div className="flex items-center gap-2 mb-2">
                         <select
                           value={selectTag}
@@ -548,56 +547,77 @@ export default function ModelDetailPage() {
                           Add
                         </button>
                       </div>
-                    ) : null}
-                    <div className="flex flex-wrap gap-2">
-                      {tags.map((t, i) => (
-                        <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
-                          {t}
-                          {editMode && (
-                            <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, tags, setTags); }} className="text-slate-500 hover:text-slate-800">×</button>
-                          )}
-                        </span>
-                      ))}
+                      <div className="flex flex-wrap gap-2">
+                        {tags.map((t, i) => (
+                          <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
+                            {t}
+                            {editMode && (
+                              <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, tags, setTags); }} className="text-slate-500 hover:text-slate-800">×</button>
+                            )}
+                          </span>
+                        ))}
+                      </div>
                     </div>
                   </div>
-                </div>
-              </section>
+                </section>
+              )}
 
               {/* Checked model */}
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Checked model</h2>
-                  <div className="flex items-center gap-2">
-                    {checkedModel && (
-                      <button onClick={deleteCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
-                    )}
-                    <button onClick={saveCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">{cmBusy ? "Saving..." : checkedModel ? "Save" : "Create"}</button>
-                  </div>
+                  {editMode && (
+                    <div className="flex items-center gap-2">
+                      {checkedModel && (
+                        <button onClick={deleteCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                      )}
+                      <button onClick={saveCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">{cmBusy ? "Saving..." : checkedModel ? "Save" : "Create"}</button>
+                    </div>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                  <div>
-                    <label className="block text-sm mb-1">Name</label>
-                    <input value={cmName} onChange={(e) => setCmName(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                {!editMode ? (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div>
+                      <div className="text-xs text-slate-500">Name</div>
+                      <div>{cmName || "-"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500">Model ID</div>
+                      <div>{cmModelId || "-"}</div>
+                    </div>
+                    <div>
+                      <div className="text-xs text-slate-500">Has content</div>
+                      <div>{cmHasContent ? "Yes" : "No"}</div>
+                    </div>
                   </div>
-                  <div>
-                    <label className="block text-sm mb-1">Model ID</label>
-                    <input value={cmModelId} onChange={(e) => setCmModelId(e.target.value)} inputMode="numeric" className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div>
+                      <label className="block text-sm mb-1">Name</label>
+                      <input value={cmName} onChange={(e) => setCmName(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                    </div>
+                    <div>
+                      <label className="block text-sm mb-1">Model ID</label>
+                      <input value={cmModelId} onChange={(e) => setCmModelId(e.target.value)} inputMode="numeric" className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                    </div>
+                    <div className="flex items-center gap-2 mt-6 md:mt-0">
+                      <input id="cm-has" type="checkbox" checked={cmHasContent} onChange={(e) => setCmHasContent(e.target.checked)} />
+                      <label htmlFor="cm-has" className="text-sm">Has content</label>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-2 mt-6 md:mt-0">
-                    <input id="cm-has" type="checkbox" checked={cmHasContent} onChange={(e) => setCmHasContent(e.target.checked)} />
-                    <label htmlFor="cm-has" className="text-sm">Has content</label>
-                  </div>
-                </div>
+                )}
               </section>
 
               {/* Model names */}
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Model names</h2>
-                  <div className="flex items-center gap-2">
-                    <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                    <button onClick={addModelName} disabled={!newName.trim() || !checkedModel} className="px-3 py-2 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
-                  </div>
+                  {editMode && (
+                    <div className="flex items-center gap-2">
+                      <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                      <button onClick={addModelName} disabled={!newName.trim() || !checkedModel} className="px-3 py-2 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+                    </div>
+                  )}
                 </div>
                 {(modelNames || []).length === 0 ? (
                   <div className="text-sm text-slate-600">No names.</div>
@@ -605,7 +625,7 @@ export default function ModelDetailPage() {
                   <div className="space-y-2">
                     {modelNames.map((n) => (
                       <div key={n.id} className="flex items-center gap-2">
-                        {editNameId === n.id ? (
+                        {editMode && editNameId === n.id ? (
                           <>
                             <input value={editNameVal} onChange={(e) => setEditNameVal(e.target.value)} className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1 text-sm" />
                             <button type="button" onClick={() => saveModelName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
@@ -614,8 +634,12 @@ export default function ModelDetailPage() {
                         ) : (
                           <>
                             <div className="flex-1 text-sm">{n.name}</div>
-                            <button type="button" onClick={() => startEditModelName(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
-                            <button type="button" onClick={() => deleteModelName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                            {editMode && (
+                              <>
+                                <button type="button" onClick={() => startEditModelName(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+                                <button type="button" onClick={() => deleteModelName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                              </>
+                            )}
                           </>
                         )}
                       </div>
