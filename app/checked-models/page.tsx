@@ -6,12 +6,14 @@ import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
 import { useToast } from "../components/ui/ToastContext";
 
+interface ModelNameItem { id: number; name: string; modelId: number; created_at?: string }
 interface CheckedModel {
   id: number;
   name: string;
   created_at: string;
   hasContent: boolean;
-  modelId: number;
+  modelId?: number;
+  names?: ModelNameItem[];
 }
 
 type HasContentFilter = "all" | "true" | "false";
@@ -33,7 +35,7 @@ export default function CheckedModelsPage() {
   }, [filter]);
   const { data, error, isLoading } = useSWR<CheckedModel[]>(`/api/checked-models${query ? `?${query}` : ""}`, fetcher, { revalidateOnFocus: false });
   const { addToast } = useToast();
-  useEffect(() => { if (error) addToast("Nu s-au putut încărca modelele.", "error"); }, [error, addToast]);
+  useEffect(() => { if (error) addToast("Could not load models.", "error"); }, [error, addToast]);
 
   const items = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -41,7 +43,7 @@ export default function CheckedModelsPage() {
     return (data || []).filter((i) =>
       i.name.toLowerCase().includes(term) ||
       String(i.id) === term ||
-      String(i.modelId) === term
+      (i.modelId !== undefined && String(i.modelId) === term)
     );
   }, [data, search]);
 
@@ -54,7 +56,7 @@ export default function CheckedModelsPage() {
         <div className="mb-6 flex flex-col md:flex-row md:items-center gap-3 justify-between">
           <div>
             <h1 className="text-2xl font-semibold tracking-tight">Checked Models</h1>
-            <p className="text-white/60 text-sm">Monitorizează modelele verificate și gestionează-le rapid.</p>
+            <p className="text-white/60 text-sm">Monitor and manage checked models quickly.</p>
           </div>
           <button
             onClick={() => setModal({ mode: "create" })}
@@ -69,7 +71,7 @@ export default function CheckedModelsPage() {
             <div className="relative">
               <input
                 type="search"
-                placeholder="Caută după nume sau ID..."
+                placeholder="Search by name or ID..."
                 className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
@@ -82,24 +84,24 @@ export default function CheckedModelsPage() {
               value={filter}
               onChange={(e) => setFilter(e.target.value as HasContentFilter)}
             >
-              <option value="all">Toate</option>
-              <option value="true">Cu conținut</option>
-              <option value="false">Fără conținut</option>
+              <option value="all">All</option>
+              <option value="true">With content</option>
+              <option value="false">Without content</option>
             </select>
           </div>
         </div>
 
         {error && (
-          <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">Nu s-au putut încărca modelele.</div>
+          <div role="alert" className="mb-4 rounded-md border border-red-500/30 bg-red-500/10 px-3 py-2 text-sm text-red-200">Could not load models.</div>
         )}
 
         <div className="bg-gray-900/40 rounded-xl border border-white/10 overflow-hidden">
           <div className="grid grid-cols-12 px-4 py-3 text-xs uppercase tracking-wider text-white/60">
-            <div className="col-span-4">Nume</div>
+            <div className="col-span-4">Name</div>
             <div className="col-span-2">Model ID</div>
-            <div className="col-span-2">Conținut</div>
-            <div className="col-span-2">Creat</div>
-            <div className="col-span-2 text-right">Acțiuni</div>
+            <div className="col-span-2">Content</div>
+            <div className="col-span-2">Created</div>
+            <div className="col-span-2 text-right">Actions</div>
           </div>
           <div className="divide-y divide-white/10">
             {isLoading ? (
@@ -107,7 +109,7 @@ export default function CheckedModelsPage() {
                 <div key={i} className="h-14 animate-pulse bg-white/5" />
               ))
             ) : items.length === 0 ? (
-              <div className="px-4 py-8 text-center text-white/70">Niciun rezultat.</div>
+              <div className="px-4 py-8 text-center text-white/70">No results.</div>
             ) : (
               items.map((item) => (
                 <Row key={item.id} item={item} onEdit={() => setModal({ mode: "edit", item })} />
@@ -134,39 +136,140 @@ export default function CheckedModelsPage() {
 
 function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { addToast } = useToast();
+
+  const { data: namesData, isLoading: namesLoading, error: namesError, mutate: refetchNames } = useSWR<ModelNameItem[]>(
+    expanded ? `/api/model-names/by-checked-model/${item.id}` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
+
   const deleteItem = async () => {
-    if (!confirm(`Ștergi modelul #${item.id}?`)) return;
+    if (!confirm(`Delete model #${item.id}?`)) return;
     try {
       setBusy(true);
       const r = await fetch(`/api/checked-models/${item.id}`, { method: "DELETE" });
       if (!r.ok) throw new Error("Fail");
+      await mutate(`/api/checked-models`);
     } catch (_e) {
-      addToast("Ștergerea a eșuat.", "error");
+      addToast("Delete failed.", "error");
     } finally {
       setBusy(false);
     }
   };
-  useEffect(() => {
-    if (!busy) return;
-  }, [busy]);
+
+  // Inline names CRUD
+  const [newName, setNewName] = useState("");
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editVal, setEditVal] = useState("");
+  const [nameBusy, setNameBusy] = useState<Record<string, boolean>>({});
+
+  const addName = async () => {
+    const val = newName.trim();
+    if (!val) return;
+    try {
+      setNameBusy((b) => ({ ...b, add: true }));
+      const r = await fetch(`/api/model-names`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: val, modelId: item.id }) });
+      if (!r.ok) throw new Error("add failed");
+      setNewName("");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not add name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, add: false }));
+    }
+  };
+  const startEdit = (n: ModelNameItem) => { setEditId(n.id); setEditVal(n.name); };
+  const cancelEdit = () => { setEditId(null); setEditVal(""); };
+  const saveEdit = async (id: number) => {
+    try {
+      setNameBusy((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editVal.trim() }) });
+      if (!r.ok) throw new Error("edit failed");
+      setEditId(null);
+      setEditVal("");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not save name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, [id]: false }));
+    }
+  };
+  const deleteName = async (id: number) => {
+    if (!confirm("Delete this name?")) return;
+    try {
+      setNameBusy((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("delete failed");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not delete name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, [id]: false }));
+    }
+  };
+
   return (
-    <div className="grid grid-cols-12 items-center px-4 py-3">
-      <div className="col-span-4">
-        <div className="font-medium">{item.name}</div>
-        <div className="text-xs text-white/50">#{item.id}</div>
+    <div className="px-4 py-1">
+      <div className="grid grid-cols-12 items-center py-2">
+        <div className="col-span-4">
+          <button onClick={() => setExpanded((v) => !v)} className="flex items-center gap-2 font-medium hover:underline">
+            <span className={`inline-block transition-transform ${expanded ? "rotate-90" : "rotate-0"}`}>▶</span>
+            {item.name}
+          </button>
+          <div className="text-xs text-white/50">#{item.id}</div>
+        </div>
+        <div className="col-span-2">{item.modelId ?? "-"}</div>
+        <div className="col-span-2">
+          <span className={`px-2 py-1 rounded text-xs ${item.hasContent ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
+            {item.hasContent ? "Yes" : "No"}
+          </span>
+        </div>
+        <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
+        <div className="col-span-2 text-right flex items-center justify-end gap-2">
+          <button onClick={onEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+          <button onClick={deleteItem} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Delete"}</button>
+        </div>
       </div>
-      <div className="col-span-2">{item.modelId}</div>
-      <div className="col-span-2">
-        <span className={`px-2 py-1 rounded text-xs ${item.hasContent ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
-          {item.hasContent ? "Da" : "Nu"}
-        </span>
-      </div>
-      <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
-      <div className="col-span-2 text-right flex items-center justify-end gap-2">
-        <button onClick={onEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Editează</button>
-        <button onClick={deleteItem} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Șterge"}</button>
-      </div>
+
+      {expanded && (
+        <div className="col-span-12 rounded-md bg-white/5 border border-white/10 p-3 mt-2">
+          <div className="text-sm font-medium mb-2">Names</div>
+          {namesLoading ? (
+            <div className="text-sm text-white/60">Loading...</div>
+          ) : namesError ? (
+            <div className="text-sm text-red-300">Could not load names.</div>
+          ) : (
+            <div className="space-y-2">
+              {(namesData ?? item.names ?? []).map((n) => (
+                <div key={n.id} className="flex items-center gap-2">
+                  {editId === n.id ? (
+                    <>
+                      <input value={editVal} onChange={(e) => setEditVal(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                      <button type="button" onClick={() => saveEdit(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
+                      <button type="button" onClick={cancelEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 text-sm">{n.name}</div>
+                      <button type="button" onClick={() => startEdit(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+                      <button type="button" onClick={() => deleteName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 pt-3">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+            <button type="button" onClick={addName} disabled={!newName.trim() || !!nameBusy.add} className="px-3 py-1.5 text-xs rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -176,13 +279,13 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const [modelId, setModelId] = useState(item?.modelId?.toString() || "");
   const [hasContent, setHasContent] = useState(item?.hasContent || false);
   const [saving, setSaving] = useState(false);
-  const valid = name.trim().length > 0 && /^(?:0|[1-9]\d*)$/.test(modelId);
+  const valid = name.trim().length > 0 && (modelId.trim() === "" || /^(?:0|[1-9]\d*)$/.test(modelId));
 
   const { addToast } = useToast();
   type ModelOption = { id: number; name: string };
   const [modelSearch, setModelSearch] = useState("");
   const { data: allModels, isLoading: modelsLoading, error: modelsError } = useSWR<ModelOption[]>(mode === "create" ? "/api/checked-models/available-models" : null, fetcher, { revalidateOnFocus: false });
-  useEffect(() => { if (modelsError) addToast("Nu s-a putut încărca lista de modele.", "error"); }, [modelsError, addToast]);
+  useEffect(() => { if (modelsError) addToast("Could not load models list.", "error"); }, [modelsError, addToast]);
   const filteredModels = useMemo(() => {
     const term = modelSearch.trim().toLowerCase();
     const list = allModels || [];
@@ -195,12 +298,73 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
     setModelId(String(m.id));
   };
 
+  // Names management (only in edit mode)
+  const checkedId = item?.id;
+  const { data: namesData, isLoading: namesLoading, error: namesError, mutate: mutateNames } = useSWR<ModelNameItem[]>(mode === "edit" && checkedId ? `/api/model-names/by-checked-model/${checkedId}` : null, fetcher, { revalidateOnFocus: false });
+  const [newName, setNewName] = useState("");
+  const [editingId, setEditingId] = useState<number | null>(null);
+  const [editingValue, setEditingValue] = useState("");
+  const [busyIds, setBusyIds] = useState<Record<string, boolean>>({});
+
+  const addName = async () => {
+    const val = newName.trim();
+    if (!val || !checkedId) return;
+    try {
+      setBusyIds((b) => ({ ...b, add: true }));
+      const r = await fetch(`/api/model-names`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: val, modelId: checkedId }) });
+      if (!r.ok) throw new Error("add failed");
+      setNewName("");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not add name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, add: false }));
+    }
+  };
+
+  const startEdit = (n: ModelNameItem) => {
+    setEditingId(n.id);
+    setEditingValue(n.name);
+  };
+  const cancelEdit = () => { setEditingId(null); setEditingValue(""); };
+  const saveEdit = async (id: number) => {
+    try {
+      setBusyIds((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editingValue.trim() }) });
+      if (!r.ok) throw new Error("edit failed");
+      setEditingId(null);
+      setEditingValue("");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not save name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, [id]: false }));
+    }
+  };
+  const deleteName = async (id: number) => {
+    if (!confirm("Delete this name?")) return;
+    try {
+      setBusyIds((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("delete failed");
+      await mutateNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not delete name.", "error");
+    } finally {
+      setBusyIds((b) => ({ ...b, [id]: false }));
+    }
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
     try {
       setSaving(true);
-      const payload = { name: name.trim(), hasContent, modelId: Number(modelId) };
+      const payload: any = { name: name.trim(), hasContent };
+      if (modelId.trim() !== "") payload.modelId = Number(modelId);
       const r = await fetch(mode === "create" ? "/api/checked-models" : `/api/checked-models/${item!.id}` , {
         method: mode === "create" ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
@@ -209,7 +373,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
       if (!r.ok) throw new Error("save failed");
       onSaved();
     } catch (_e) {
-      addToast("Salvarea a eșuat.", "error");
+      addToast("Save failed.", "error");
     } finally {
       setSaving(false);
     }
@@ -219,30 +383,30 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
       <div className="relative w-full max-w-xl bg-gray-900 rounded-lg border border-white/10 p-4">
-        <h2 className="text-lg font-semibold mb-3">{mode === "create" ? "Adaugă model" : "Editează model"}</h2>
+        <h2 className="text-lg font-semibold mb-3">{mode === "create" ? "Add model" : "Edit model"}</h2>
         <form onSubmit={submit} className="space-y-4">
           {mode === "create" && (
             <div className="rounded-md border border-white/10">
               <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
-                <div className="text-sm font-medium">Alege din modelele existente</div>
+                <div className="text-sm font-medium">Choose from existing models</div>
               </div>
               <div className="p-3 space-y-2">
                 <input
                   type="search"
-                  placeholder="Caută model după nume sau ID..."
+                  placeholder="Search model by name or ID..."
                   className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
                   value={modelSearch}
                   onChange={(e) => setModelSearch(e.target.value)}
                 />
                 <div className="max-h-64 overflow-auto rounded border border-white/10 divide-y divide-white/10">
                   {modelsLoading && (
-                    <div className="p-3 text-sm text-white/60">Se încarcă...</div>
+                    <div className="p-3 text-sm text-white/60">Loading...</div>
                   )}
                   {modelsError && (
-                    <div className="p-3 text-sm text-red-300">Eroare la încărcarea listei.</div>
+                    <div className="p-3 text-sm text-red-300">Error loading list.</div>
                   )}
                   {!modelsLoading && !modelsError && (filteredModels.length === 0 ? (
-                    <div className="p-3 text-sm text-white/60">Niciun model găsit.</div>
+                    <div className="p-3 text-sm text-white/60">No models found.</div>
                   ) : (
                     filteredModels.map((m) => (
                       <button
@@ -263,7 +427,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
           )}
 
           <div>
-            <label className="block text-sm mb-1">Nume</label>
+            <label className="block text-sm mb-1">Name</label>
             <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
           </div>
           <div>
@@ -272,11 +436,47 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
           </div>
           <div className="flex items-center gap-2">
             <input id="hasContent" type="checkbox" checked={hasContent} onChange={(e) => setHasContent(e.target.checked)} />
-            <label htmlFor="hasContent" className="text-sm">Are conținut</label>
+            <label htmlFor="hasContent" className="text-sm">Has content</label>
           </div>
+
+          {mode === "edit" && (
+            <div className="rounded-md border border-white/10 p-3 space-y-3">
+              <div className="font-medium">Names</div>
+              {namesLoading ? (
+                <div className="text-sm text-white/60">Loading...</div>
+              ) : namesError ? (
+                <div className="text-sm text-red-300">Could not load names.</div>
+              ) : (
+                <div className="space-y-2">
+                  {(namesData || []).map((n) => (
+                    <div key={n.id} className="flex items-center gap-2">
+                      {editingId === n.id ? (
+                        <>
+                          <input value={editingValue} onChange={(e) => setEditingValue(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                          <button type="button" onClick={() => saveEdit(n.id)} disabled={!!busyIds[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
+                          <button type="button" onClick={cancelEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Cancel</button>
+                        </>
+                      ) : (
+                        <>
+                          <div className="flex-1 text-sm">{n.name}</div>
+                          <button type="button" onClick={() => startEdit(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+                          <button type="button" onClick={() => deleteName(n.id)} disabled={!!busyIds[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                        </>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+              <div className="flex items-center gap-2 pt-2">
+                <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                <button type="button" onClick={addName} disabled={!newName.trim() || !!busyIds.add} className="px-3 py-1.5 text-xs rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+              </div>
+            </div>
+          )}
+
           <div className="flex items-center justify-end gap-2 pt-2">
-            <button type="button" onClick={onClose} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Anulează</button>
-            <button disabled={!valid || saving} className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">{saving ? "Se salvează..." : "Salvează"}</button>
+            <button type="button" onClick={onClose} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Cancel</button>
+            <button disabled={!valid || saving} className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">{saving ? "Saving..." : "Save"}</button>
           </div>
         </form>
       </div>

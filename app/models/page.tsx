@@ -21,7 +21,7 @@ const ModelsPage = () => {
       setLoading(true);
       try {
         const res = await fetch("/api/images/photos");
-        if (!res.ok) throw new Error("Nu s-au putut încărca pozele");
+        if (!res.ok) throw new Error("Could not load photos");
         const data = await res.json();
         setPhotos(Array.isArray(data.images) ? data.images : []);
       } catch (_) {
@@ -48,16 +48,16 @@ const ModelsPage = () => {
           <div className="flex items-center justify-between flex-wrap gap-3">
             <div>
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Models</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">Alege un model pentru a vedea toate videourile.</p>
+              <p className="text-sm text-slate-600 dark:text-slate-400">Choose a model to see all videos.</p>
             </div>
             <div className="w-full sm:w-72">
-              <label htmlFor="model-search" className="sr-only">Căutare model</label>
+              <label htmlFor="model-search" className="sr-only">Search model</label>
               <input
                 id="model-search"
                 type="search"
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Caută model..."
+                placeholder="Search model..."
                 className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
             </div>
@@ -67,7 +67,7 @@ const ModelsPage = () => {
             {loading ? (
               <LoadingSpinner />
             ) : filtered.length === 0 ? (
-              <EmptyState message="Nu au fost găsite modele" />
+              <EmptyState message="No models found" />
             ) : (
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
                 {filtered.map((photo) => {
