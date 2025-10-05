@@ -54,12 +54,16 @@ const ModelsPage = () => {
         const r = await fetch(`/api/model/data${qs.toString() ? `?${qs.toString()}` : ""}`);
         if (r.ok) {
           const j = await r.json();
-          const items: any[] = Array.isArray(j?.items) ? j.items : [];
+          const rawItems: any[] = Array.isArray(j?.items)
+            ? j.items
+            : Array.isArray(j?.models)
+            ? j.models.map((m: any) => ({ modelData: m }))
+            : [];
           const nextChecked: Record<string, boolean> = {};
           const nextTags: Record<string, string[]> = {};
           const nextItems: Record<string, any> = {};
-          for (const it of items) {
-            const name: string = String(it?.name || it?.modelData?.model?.name || "");
+          for (const it of rawItems) {
+            const name: string = String(it?.name || it?.modelData?.model?.name || it?.modelData?.modelName || "");
             if (!name) continue;
             const cm = Array.isArray(it?.modelData?.checkedModel) ? it.modelData.checkedModel : [];
             nextChecked[name] = cm.length > 0;
