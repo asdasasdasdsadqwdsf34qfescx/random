@@ -655,7 +655,23 @@ export default function ModelDetailPage() {
               {/* Videos */}
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Videos ({videos.length})</h2>
+                  <div className="flex items-center gap-3 flex-wrap">
+                    <h2 className="text-lg font-semibold">Videos ({videos.length})</h2>
+                    {allTags.length > 0 && (
+                      <div className="flex flex-wrap gap-2">
+                        {allTags.map((t) => (
+                          <button
+                            key={`header-tag-${t}`}
+                            type="button"
+                            onClick={() => setVideoFilter(t)}
+                            className="inline-flex items-center px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                          >
+                            {t}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
                   {videoFilter && (
                     <div className="flex items-center gap-2">
                       <span className="text-sm text-slate-600 dark:text-slate-400">Filter: {videoFilter}</span>
@@ -671,20 +687,6 @@ export default function ModelDetailPage() {
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {videos.map((video) => (
                       <div key={video} className="relative">
-                        {allTags.length > 0 && (
-                          <div className="absolute top-2 left-2 z-10 flex flex-wrap gap-1">
-                            {allTags.map((t) => (
-                              <button
-                                key={`${video}-${t}`}
-                                type="button"
-                                onClick={() => setVideoFilter(t)}
-                                className="inline-flex items-center px-2 py-0.5 rounded bg-black/60 text-white text-xs hover:bg-black/80"
-                              >
-                                {t}
-                              </button>
-                            ))}
-                          </div>
-                        )}
                         <VideoPlayer
                           src={`/videos/${encodeURIComponent(name)}/${video}`}
                           className="w-full"
