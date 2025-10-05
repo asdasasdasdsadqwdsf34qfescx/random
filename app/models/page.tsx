@@ -63,13 +63,18 @@ const ModelsPage = () => {
   }, []);
 
   useEffect(() => {
+    // sync URL
+    const qs = new URLSearchParams();
+    if (selectedVideoTags.length) qs.set("videoTags", selectedVideoTags.join(","));
+    if (selectedTags.length) qs.set("tags", selectedTags.join(","));
+    if (onlineOnly) qs.set("isOnline", "true");
+    const query = qs.toString();
+    const url = query ? `${pathname}?${query}` : pathname;
+    router.replace(url, { scroll: false });
+
     const fetchCheckedAndTags = async () => {
       try {
-        const qs = new URLSearchParams();
-        if (selectedVideoTags.length) qs.set("videoTags", selectedVideoTags.join(","));
-        if (selectedTags.length) qs.set("tags", selectedTags.join(","));
-        if (onlineOnly) qs.set("isOnline", "true");
-        const r = await fetch(`/api/model/data${qs.toString() ? `?${qs.toString()}` : ""}`);
+        const r = await fetch(`/api/model/data${query ? `?${query}` : ""}`);
         if (r.ok) {
           const j = await r.json();
           const rawItems: any[] = Array.isArray(j?.items)
@@ -113,7 +118,7 @@ const ModelsPage = () => {
       } catch {}
     };
     fetchCheckedAndTags();
-  }, [selectedVideoTags, selectedTags, onlineOnly]);
+  }, [selectedVideoTags, selectedTags, onlineOnly, pathname, router]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
