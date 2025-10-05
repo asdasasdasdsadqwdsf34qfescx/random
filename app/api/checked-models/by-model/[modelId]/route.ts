@@ -1,10 +1,18 @@
 import { NextResponse } from "next/server";
 import { getByModelId } from "@/lib/checkedModelsStore";
+import { callRemote } from "@/lib/checkedModelsRemote";
 
 export async function GET(_req: Request, { params }: { params: { modelId: string } }) {
   try {
     const modelIdNum = Number(params.modelId);
     if (!Number.isFinite(modelIdNum)) return NextResponse.json({ statusCode: 400, message: "Invalid modelId", error: "Bad Request" }, { status: 400 });
+
+    const remote = await callRemote(`/checked-models/by-model/${modelIdNum}`, { method: "GET" });
+    if (remote) {
+      const data = await remote.json();
+      return NextResponse.json(data, { status: remote.status });
+    }
+
     const items = getByModelId(modelIdNum);
     return NextResponse.json(items, { status: 200 });
   } catch (e: any) {
