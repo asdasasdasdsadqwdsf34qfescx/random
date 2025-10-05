@@ -18,23 +18,12 @@ export async function GET(req: Request) {
     const hasOnlineFilter = isOnlineParam === "true" || isOnlineParam === "false";
     const isOnlineFilter = isOnlineParam === "true";
 
-    // Prefer upstream if available (fetch full data, filter locally for consistency)
-    const remote = await callRemote("/model/data", { method: "GET" });
+    // Prefer upstream if available: pass query to upstream to let it filter
+    const qsUp = searchParams.toString();
+    const remote = await callRemote(`/model/data${qsUp ? `?${qsUp}` : ""}`, { method: "GET" });
     if (remote) {
       const data = await remote.json().catch(() => ({}));
-      const items: any[] = Array.isArray((data as any)?.items) ? (data as any).items : Array.isArray(data) ? (data as any) : [];
-      const filtered = items.filter((it: any) => {
-        const model = it?.modelData?.model || {};
-        const vt: string[] = Array.isArray(model.videoTags) ? model.videoTags.map((x: any) => String(x).toLowerCase()) : [];
-        const tg: string[] = Array.isArray(model.tags) ? model.tags.map((x: any) => String(x).toLowerCase()) : [];
-        const online = typeof model.isOnline === "boolean" ? model.isOnline : Boolean(it?.modelData?.isOnline);
-
-        if (filterVideoTags.length && !filterVideoTags.some((t) => vt.includes(t))) return false;
-        if (filterTags.length && !filterTags.some((t) => tg.includes(t))) return false;
-        if (hasOnlineFilter && online !== isOnlineFilter) return false;
-        return true;
-      });
-      return NextResponse.json({ items: filtered }, { status: 200 });
+      return NextResponse.json(data, { status: remote.status });
     }
 
     // Local fallback: derive from public/photos and local checked models
