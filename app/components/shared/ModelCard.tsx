@@ -44,9 +44,9 @@ export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick, tags =
       )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="absolute bottom-2 left-2 right-2 pointer-events-none">
-        <p className="text-sm font-medium text-white drop-shadow truncate">
+        <span className="inline-block max-w-full bg-black/70 text-white text-xs sm:text-sm font-medium px-2 py-1 rounded-md truncate">
           {photo.replace(/\.[^.]+$/, "")}
-        </p>
+        </span>
       </div>
     </div>
   </div>
