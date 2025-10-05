@@ -226,7 +226,9 @@ const ModelsPage = () => {
               (() => {
                 const apiNames = Object.keys(itemsByName);
                 if (apiNames.length === 0) return <EmptyState message="No models found" />;
+                const q = search.trim().toLowerCase();
                 const cards = apiNames
+                  .filter((name) => (q ? name.toLowerCase().includes(q) : true))
                   .map((name) => {
                     const tags = tagsByName[name] || [];
                     const checked = !!checkedByName[name];
