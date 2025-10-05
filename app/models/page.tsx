@@ -27,6 +27,24 @@ const ModelsPage = () => {
   const [selectTag, setSelectTag] = useState<string>("");
   const [itemsByName, setItemsByName] = useState<Record<string, any>>({});
 
+  const searchParams = useSearchParams();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    const initFromQuery = () => {
+      const sp = new URLSearchParams(searchParams?.toString() || "");
+      const parseList = (key: string) => Array.from(new Set((sp.getAll(key).join(",") || "").split(",").map((s) => s.trim()).filter(Boolean)));
+      const vt = parseList("videoTags");
+      const tg = parseList("tags");
+      const online = sp.get("isOnline") === "true";
+      if (vt.length) setSelectedVideoTags(vt);
+      if (tg.length) setSelectedTags(tg);
+      if (online) setOnlineOnly(true);
+    };
+    initFromQuery();
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   useEffect(() => {
     const fetchPhotos = async () => {
       setLoading(true);
