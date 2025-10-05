@@ -121,16 +121,72 @@ const ModelsPage = () => {
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Models</h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">Choose a model to see all videos.</p>
             </div>
-            <div className="w-full sm:w-72">
-              <label htmlFor="model-search" className="sr-only">Search model</label>
-              <input
-                id="model-search"
-                type="search"
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search model..."
-                className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
-              />
+            <div className="w-full flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-end">
+              <div className="w-full sm:w-64">
+                <label htmlFor="model-search" className="sr-only">Search model</label>
+                <input
+                  id="model-search"
+                  type="search"
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  placeholder="Search model..."
+                  className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-slate-400 dark:placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                />
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectVideoTag}
+                    onChange={(e) => setSelectVideoTag(e.target.value)}
+                    className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-2 text-sm"
+                  >
+                    <option value="">Video tag</option>
+                    {ALLOWED_VIDEO_TAGS.filter((t) => !selectedVideoTags.includes(t)).map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = selectVideoTag.trim();
+                      if (v && !selectedVideoTags.includes(v)) setSelectedVideoTags([...selectedVideoTags, v]);
+                      setSelectVideoTag("");
+                    }}
+                    disabled={!selectVideoTag}
+                    className="px-2 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+                <div className="flex items-center gap-2">
+                  <select
+                    value={selectTag}
+                    onChange={(e) => setSelectTag(e.target.value)}
+                    className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-2 text-sm"
+                  >
+                    <option value="">Tag</option>
+                    {ALLOWED_TAGS.filter((t) => !selectedTags.includes(t)).map((t) => (
+                      <option key={t} value={t}>{t}</option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const v = selectTag.trim();
+                      if (v && !selectedTags.includes(v)) setSelectedTags([...selectedTags, v]);
+                      setSelectTag("");
+                    }}
+                    disabled={!selectTag}
+                    className="px-2 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                  >
+                    Add
+                  </button>
+                </div>
+                <label className="inline-flex items-center gap-2 text-sm text-slate-700 dark:text-slate-300">
+                  <input type="checkbox" checked={onlineOnly} onChange={(e) => setOnlineOnly(e.target.checked)} />
+                  Online
+                </label>
+              </div>
             </div>
           </div>
 
