@@ -29,10 +29,20 @@ export const VideoPlayer = ({
           ref={videoRef}
           controls
           preload="metadata"
+          loop
+          playsInline
           className={`absolute inset-0 w-full h-full object-contain bg-black ${isLoading ? "opacity-0" : "opacity-100"}`}
           src={src}
           title={title}
           onLoadedData={() => setIsLoading(false)}
+          onEnded={() => {
+            const v = videoRef.current;
+            if (!v) return;
+            try {
+              v.currentTime = 0;
+              if (!v.paused) v.play().catch(() => {});
+            } catch {}
+          }}
         />
       </div>
 
