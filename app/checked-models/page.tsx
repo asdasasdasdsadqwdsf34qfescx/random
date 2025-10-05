@@ -4,6 +4,7 @@ import { useEffect, useMemo, useState } from "react";
 import useSWR, { mutate } from "swr";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
+import { useToast } from "../components/ui/ToastContext";
 
 interface CheckedModel {
   id: number;
@@ -31,6 +32,8 @@ export default function CheckedModelsPage() {
     return params.toString();
   }, [filter]);
   const { data, error, isLoading } = useSWR<CheckedModel[]>(`/api/checked-models${query ? `?${query}` : ""}`, fetcher, { revalidateOnFocus: false });
+  const { addToast } = useToast();
+  useEffect(() => { if (error) addToast("Nu s-au putut încărca modelele.", "error"); }, [error, addToast]);
 
   const items = useMemo(() => {
     const term = search.trim().toLowerCase();
@@ -131,12 +134,15 @@ export default function CheckedModelsPage() {
 
 function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
   const [busy, setBusy] = useState(false);
+  const { addToast } = useToast();
   const deleteItem = async () => {
     if (!confirm(`Ștergi modelul #${item.id}?`)) return;
     try {
       setBusy(true);
       const r = await fetch(`/api/checked-models/${item.id}`, { method: "DELETE" });
       if (!r.ok) throw new Error("Fail");
+    } catch (_e) {
+      addToast("Ștergerea a eșuat.", "error");
     } finally {
       setBusy(false);
     }
@@ -172,9 +178,11 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const [saving, setSaving] = useState(false);
   const valid = name.trim().length > 0 && /^(?:0|[1-9]\d*)$/.test(modelId);
 
+  const { addToast } = useToast();
   type ModelOption = { id: number; name: string };
   const [modelSearch, setModelSearch] = useState("");
   const { data: allModels, isLoading: modelsLoading, error: modelsError } = useSWR<ModelOption[]>(mode === "create" ? "/api/models" : null, fetcher, { revalidateOnFocus: false });
+  useEffect(() => { if (modelsError) addToast("Nu s-a putut încărca lista de modele.", "error"); }, [modelsError, addToast]);
   const filteredModels = useMemo(() => {
     const term = modelSearch.trim().toLowerCase();
     const list = allModels || [];
@@ -200,6 +208,8 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
       });
       if (!r.ok) throw new Error("save failed");
       onSaved();
+    } catch (_e) {
+      addToast("Salvarea a eșuat.", "error");
     } finally {
       setSaving(false);
     }
