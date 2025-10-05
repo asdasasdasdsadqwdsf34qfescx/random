@@ -7,6 +7,39 @@ import { useSidebar } from "@/app/components/ui/SidebarContext";
 import { useToast } from "@/app/components/ui/ToastContext";
 import { VideoPlayer } from "@/app/components/shared/VideoPlayer";
 
+// Allowed values for selects
+const ALLOWED_VIDEO_TAGS = [
+  "sideways",
+  "backfuck",
+  "masturbate",
+  "dildo",
+  "doggy",
+  "hand",
+  "under",
+  "suck",
+  "close",
+  "scissors",
+  "ride",
+  "lick",
+  "kiss",
+  "body",
+  "pillow",
+];
+
+const ALLOWED_TAGS = [
+  "model",
+  "lesbian",
+  "quin",
+  "petit",
+  "asian",
+  "moaning",
+  "hairy",
+  "cute",
+  "ideal",
+  "boobs",
+  "ass",
+];
+
 type Model = {
   id: number;
   created_at?: string;
@@ -16,6 +49,7 @@ type Model = {
   startedAt?: string | null;
   videoTags?: string[] | null;
   tags?: string[] | null;
+  [key: string]: any;
 };
 
 type ModelName = { id: number; created_at?: string; name: string; modelId: number };
@@ -34,7 +68,7 @@ type ModelDataResponse = {
   };
 };
 
-const arrayFrom = (v: any): string[] => Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
+const arrayFrom = (v: any): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
 
 export default function ModelDetailPage() {
   const { isOpen } = useSidebar();
@@ -51,6 +85,7 @@ export default function ModelDetailPage() {
   const [vidLoading, setVidLoading] = useState(true);
 
   const [savingModel, setSavingModel] = useState(false);
+  const [editMode, setEditMode] = useState(false);
 
   // Editable model fields
   const model: Model | undefined = data?.modelData?.model;
@@ -59,11 +94,17 @@ export default function ModelDetailPage() {
   const [startedAt, setStartedAt] = useState<string>("");
   const [videoTags, setVideoTags] = useState<string[]>([]);
   const [tags, setTags] = useState<string[]>([]);
-  const [newVideoTag, setNewVideoTag] = useState("");
-  const [newTag, setNewTag] = useState("");
+  const [selectVideoTag, setSelectVideoTag] = useState<string>("");
+  const [selectTag, setSelectTag] = useState<string>("");
 
-  const modelNames: ModelName[] = useMemo(() => data?.modelData?.modelNames || data?.modelData?.modelNamesData || [], [data]);
-  const checkedModel: CheckedModel | undefined = useMemo(() => (data?.modelData?.checkedModel || [])[0], [data]);
+  const modelNames: ModelName[] = useMemo(
+    () => data?.modelData?.modelNames || data?.modelData?.modelNamesData || [],
+    [data]
+  );
+  const checkedModel: CheckedModel | undefined = useMemo(
+    () => (data?.modelData?.checkedModel || [])[0],
+    [data]
+  );
 
   useEffect(() => {
     const run = async () => {
@@ -81,6 +122,7 @@ export default function ModelDetailPage() {
         setStartedAt(m?.startedAt ? toLocalDateTime(m.startedAt) : "");
         setVideoTags(arrayFrom(m?.videoTags));
         setTags(arrayFrom(m?.tags));
+        setEditMode(false);
       } catch (e: any) {
         setError(e?.message || "Error");
       } finally {
@@ -108,6 +150,17 @@ export default function ModelDetailPage() {
     run();
   }, [name]);
 
+  const resetFormFromModel = () => {
+    const m = model;
+    setIsOnline(!!m?.isOnline);
+    setImageUrl((m?.imageUrl as any) || "");
+    setStartedAt(m?.startedAt ? toLocalDateTime(m.startedAt) : "");
+    setVideoTags(arrayFrom(m?.videoTags));
+    setTags(arrayFrom(m?.tags));
+    setSelectVideoTag("");
+    setSelectTag("");
+  };
+
   const saveModel = async () => {
     if (!model?.id) return;
     try {
@@ -119,9 +172,15 @@ export default function ModelDetailPage() {
         videoTags,
         tags,
       };
-      const r = await fetch(`/api/models/${model.id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const r = await fetch(`/api/models/${model.id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!r.ok) throw new Error("Save failed");
       addToast("Model updated", "success");
+      await reload();
+      setEditMode(false);
     } catch (_e) {
       addToast("Could not save model", "error");
     } finally {
@@ -140,10 +199,13 @@ export default function ModelDetailPage() {
     if (!val || !checkedModel?.id) return;
     try {
       setNameBusy((b) => ({ ...b, add: true }));
-      const r = await fetch(`/api/model-names`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: val, modelId: checkedModel.id }) });
+      const r = await fetch(`/api/model-names`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: val, modelId: checkedModel.id }),
+      });
       if (!r.ok) throw new Error("add failed");
       setNewName("");
-      // Reload data
       await reload();
     } catch (_e) {
       addToast("Could not add name", "error");
@@ -151,12 +213,22 @@ export default function ModelDetailPage() {
       setNameBusy((b) => ({ ...b, add: false }));
     }
   };
-  const startEditModelName = (n: ModelName) => { setEditNameId(n.id); setEditNameVal(n.name); };
-  const cancelEditModelName = () => { setEditNameId(null); setEditNameVal(""); };
+  const startEditModelName = (n: ModelName) => {
+    setEditNameId(n.id);
+    setEditNameVal(n.name);
+  };
+  const cancelEditModelName = () => {
+    setEditNameId(null);
+    setEditNameVal("");
+  };
   const saveModelName = async (id: number) => {
     try {
       setNameBusy((b) => ({ ...b, [id]: true }));
-      const r = await fetch(`/api/model-names/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editNameVal.trim() }) });
+      const r = await fetch(`/api/model-names/${id}`, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: editNameVal.trim() }),
+      });
       if (!r.ok) throw new Error("edit failed");
       setEditNameId(null);
       setEditNameVal("");
@@ -206,7 +278,11 @@ export default function ModelDetailPage() {
       if (cmModelId.trim() !== "") payload.modelId = Number(cmModelId);
       const url = checkedModel ? `/api/checked-models/${checkedModel.id}` : "/api/checked-models";
       const method = checkedModel ? "PUT" : "POST";
-      const r = await fetch(url, { method, headers: { "Content-Type": "application/json" }, body: JSON.stringify(payload) });
+      const r = await fetch(url, {
+        method,
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
+      });
       if (!r.ok) throw new Error("save failed");
       addToast("Saved", "success");
       await reload();
@@ -236,7 +312,7 @@ export default function ModelDetailPage() {
     try {
       const [d, v] = await Promise.all([
         fetch(`/api/model/data/${encodeURIComponent(name)}`).then((r) => r.json()),
-        fetch(`/api/videos?name=${encodeURIComponent(name)}`).then((r) => r.json())
+        fetch(`/api/videos?name=${encodeURIComponent(name)}`).then((r) => r.json()),
       ]);
       setData(d);
       const m = d?.modelData?.model as Model | undefined;
@@ -261,6 +337,24 @@ export default function ModelDetailPage() {
     setList(next);
   };
 
+  const filteredModelEntries = useMemo(() => {
+    if (!model) return [] as [string, any][];
+    const omit = new Set(["id", "created_at", "imageUrl", "videoTags", "tags"]);
+    return Object.entries(model).filter(([k, v]) => !omit.has(k) && v !== null && v !== undefined);
+  }, [model]);
+
+  const prettyValue = (v: any) => {
+    if (Array.isArray(v)) return v.join(", ");
+    if (typeof v === "boolean") return v ? "Yes" : "No";
+    if (typeof v === "string") return v;
+    if (typeof v === "number") return String(v);
+    try {
+      return JSON.stringify(v);
+    } catch {
+      return String(v);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
@@ -271,7 +365,22 @@ export default function ModelDetailPage() {
               <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Model: {name}</h1>
               <p className="text-sm text-slate-600 dark:text-slate-400">View and manage model data, names, checked model and videos.</p>
             </div>
-            <button onClick={() => router.push(`/models`)} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Back to Models</button>
+            <div className="flex items-center gap-2">
+              <button onClick={() => router.push(`/models`)} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Back to Models</button>
+              <button
+                onClick={() => {
+                  if (editMode) {
+                    resetFormFromModel();
+                    setEditMode(false);
+                  } else {
+                    setEditMode(true);
+                  }
+                }}
+                className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500"
+              >
+                {editMode ? "Cancel" : "Edit"}
+              </button>
+            </div>
           </div>
 
           {loading ? (
@@ -286,57 +395,126 @@ export default function ModelDetailPage() {
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <h2 className="text-lg font-semibold">Model data</h2>
-                  <button onClick={saveModel} disabled={savingModel || !model?.id} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">{savingModel ? "Saving..." : "Save"}</button>
+                  {editMode && (
+                    <button onClick={saveModel} disabled={savingModel || !model?.id} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
+                      {savingModel ? "Saving..." : "Save"}
+                    </button>
+                  )}
                 </div>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <div className="text-xs text-slate-500">ID</div>
-                    <div className="text-sm">{model?.id}</div>
+
+                {!editMode ? (
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {filteredModelEntries.length === 0 ? (
+                      <div className="text-sm text-slate-600">No data.</div>
+                    ) : (
+                      filteredModelEntries.map(([k, v]) => (
+                        <div key={k}>
+                          <div className="text-xs text-slate-500">{k}</div>
+                          <div className="text-sm break-words">{k === "startedAt" && typeof v === "string" ? toLocalDateTime(v) : prettyValue(v)}</div>
+                        </div>
+                      ))
+                    )}
                   </div>
-                  <div>
-                    <div className="text-xs text-slate-500">Name</div>
-                    <div className="text-sm">{model?.name}</div>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <input id="m-online" type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
-                    <label htmlFor="m-online" className="text-sm">Is online</label>
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Image URL</label>
-                    <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                  </div>
-                  <div>
-                    <label className="block text-sm mb-1">Started at</label>
-                    <input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                  </div>
-                </div>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div>
+                        <div className="text-xs text-slate-500">ID</div>
+                        <div className="text-sm">{model?.id}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500">Name</div>
+                        <div className="text-sm">{model?.name}</div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <input id="m-online" type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
+                        <label htmlFor="m-online" className="text-sm">Is online</label>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Image URL</label>
+                        <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Started at</label>
+                        <input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                      </div>
+                    </div>
+                  </>
+                )}
+
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
                   <div>
                     <div className="text-sm font-medium mb-2">Video tags</div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <input value={newVideoTag} onChange={(e) => setNewVideoTag(e.target.value)} placeholder="Add tag" className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                      <button type="button" onClick={() => { addArrayItem(newVideoTag, videoTags, setVideoTags); setNewVideoTag(""); }} className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500">Add</button>
-                    </div>
+                    {editMode ? (
+                      <div className="flex items-center gap-2 mb-2">
+                        <select
+                          value={selectVideoTag}
+                          onChange={(e) => setSelectVideoTag(e.target.value)}
+                          className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        >
+                          <option value="">Select tag</option>
+                          {ALLOWED_VIDEO_TAGS.filter((t) => !videoTags.includes(t)).map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addArrayItem(selectVideoTag, videoTags, setVideoTags);
+                            setSelectVideoTag("");
+                          }}
+                          disabled={!selectVideoTag}
+                          className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ) : null}
                     <div className="flex flex-wrap gap-2">
                       {videoTags.map((t, i) => (
                         <span key={`${t}-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
                           {t}
-                          <button type="button" onClick={() => removeArrayItem(i, videoTags, setVideoTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                          {editMode && (
+                            <button type="button" onClick={() => removeArrayItem(i, videoTags, setVideoTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                          )}
                         </span>
                       ))}
                     </div>
                   </div>
                   <div>
                     <div className="text-sm font-medium mb-2">Tags</div>
-                    <div className="flex items-center gap-2 mb-2">
-                      <input value={newTag} onChange={(e) => setNewTag(e.target.value)} placeholder="Add tag" className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                      <button type="button" onClick={() => { addArrayItem(newTag, tags, setTags); setNewTag(""); }} className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500">Add</button>
-                    </div>
+                    {editMode ? (
+                      <div className="flex items-center gap-2 mb-2">
+                        <select
+                          value={selectTag}
+                          onChange={(e) => setSelectTag(e.target.value)}
+                          className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        >
+                          <option value="">Select tag</option>
+                          {ALLOWED_TAGS.filter((t) => !tags.includes(t)).map((t) => (
+                            <option key={t} value={t}>{t}</option>
+                          ))}
+                        </select>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            addArrayItem(selectTag, tags, setTags);
+                            setSelectTag("");
+                          }}
+                          disabled={!selectTag}
+                          className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    ) : null}
                     <div className="flex flex-wrap gap-2">
                       {tags.map((t, i) => (
                         <span key={`${t}-${i}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
                           {t}
-                          <button type="button" onClick={() => removeArrayItem(i, tags, setTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                          {editMode && (
+                            <button type="button" onClick={() => removeArrayItem(i, tags, setTags)} className="text-slate-500 hover:text-slate-800">×</button>
+                          )}
                         </span>
                       ))}
                     </div>
