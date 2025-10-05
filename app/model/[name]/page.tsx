@@ -98,6 +98,7 @@ export default function ModelDetailPage() {
   const [selectTag, setSelectTag] = useState<string>("");
   const [avatarSrc, setAvatarSrc] = useState<string>("");
   const [videoFilter, setVideoFilter] = useState<string>("");
+  const allTags = useMemo(() => Array.from(new Set([...(videoTags || []), ...(tags || [])])), [videoTags, tags]);
 
   const modelNames: ModelName[] = useMemo(
     () => data?.modelData?.modelNames || data?.modelData?.modelNamesData || [],
@@ -671,6 +672,20 @@ export default function ModelDetailPage() {
                           src={`/videos/${encodeURIComponent(name)}/${video}`}
                           className="w-full"
                         />
+                        {allTags.length > 0 && (
+                          <div className="mt-2 flex flex-wrap gap-2">
+                            {allTags.map((t) => (
+                              <button
+                                key={`${video}-${t}`}
+                                type="button"
+                                onClick={() => setVideoFilter(t)}
+                                className="inline-flex items-center px-2 py-0.5 rounded bg-slate-200 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200 hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                              >
+                                {t}
+                              </button>
+                            ))}
+                          </div>
+                        )}
                         <p className="mt-2 text-sm text-slate-500 truncate">{video}</p>
                       </div>
                     ))}
