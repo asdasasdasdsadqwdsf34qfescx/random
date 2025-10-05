@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
 import { callRemote } from "@/lib/checkedModelsRemote";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ name: string }> }) {
+export async function GET(_req: Request, { params }: { params: { name: string } }) {
   try {
-    const { name } = await ctx.params;
+    const { name } = params;
     if (!name || typeof name !== "string") {
       return NextResponse.json({ statusCode: 400, message: "Invalid name", error: "Bad Request" }, { status: 400 });
     }
