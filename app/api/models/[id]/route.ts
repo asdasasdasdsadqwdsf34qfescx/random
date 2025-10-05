@@ -1,8 +1,8 @@
 import { NextResponse } from "next/server";
 import { callRemote } from "@/lib/checkedModelsRemote";
 
-export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id } = await ctx.params;
+export async function GET(_req: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
   const idNum = Number(id);
   if (!Number.isFinite(idNum)) return NextResponse.json({ statusCode: 400, message: "Invalid id", error: "Bad Request" }, { status: 400 });
   const remote = await callRemote(`/models/${idNum}`, { method: "GET" });
@@ -11,9 +11,9 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
   return NextResponse.json(data, { status: remote.status });
 }
 
-export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }) {
+export async function PUT(req: Request, { params }: { params: { id: string } }) {
   try {
-    const { id } = await ctx.params;
+    const { id } = params;
     const idNum = Number(id);
     if (!Number.isFinite(idNum)) return NextResponse.json({ statusCode: 400, message: "Invalid id", error: "Bad Request" }, { status: 400 });
     const body = await req.json().catch(() => ({}));
@@ -30,8 +30,8 @@ export async function PUT(req: Request, ctx: { params: Promise<{ id: string }> }
   }
 }
 
-export async function DELETE(_req: Request, ctx: { params: Promise<{ id: string }> }) {
-  const { id } = await ctx.params;
+export async function DELETE(_req: Request, { params }: { params: { id: string } }) {
+  const { id } = params;
   const idNum = Number(id);
   if (!Number.isFinite(idNum)) return NextResponse.json({ statusCode: 400, message: "Invalid id", error: "Bad Request" }, { status: 400 });
   const remote = await callRemote(`/models/${idNum}`, { method: "DELETE" });
