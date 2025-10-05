@@ -6,12 +6,14 @@ import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
 import { useToast } from "../components/ui/ToastContext";
 
+interface ModelNameItem { id: number; name: string; modelId: number; created_at?: string }
 interface CheckedModel {
   id: number;
   name: string;
   created_at: string;
   hasContent: boolean;
   modelId?: number;
+  names?: ModelNameItem[];
 }
 
 type HasContentFilter = "all" | "true" | "false";
