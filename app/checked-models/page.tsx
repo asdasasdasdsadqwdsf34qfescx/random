@@ -215,12 +215,12 @@ function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
 
   return (
     <div className="px-4 py-1">
-      <div className="grid grid-cols-12 items-center py-2">
+      <div className="grid grid-cols-12 items-center py-2 cursor-pointer hover:bg-white/5 rounded" onClick={() => setExpanded((v) => !v)}>
         <div className="col-span-4">
-          <button onClick={() => setExpanded((v) => !v)} className="flex items-center gap-2 font-medium hover:underline">
+          <div className="flex items-center gap-2 font-medium">
             <span className={`inline-block transition-transform ${expanded ? "rotate-90" : "rotate-0"}`}>▶</span>
             {item.name}
-          </button>
+          </div>
           <div className="text-xs text-white/50">#{item.id}</div>
         </div>
         <div className="col-span-2">{item.modelId ?? "-"}</div>
@@ -231,8 +231,8 @@ function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
         </div>
         <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
         <div className="col-span-2 text-right flex items-center justify-end gap-2">
-          <button onClick={onEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
-          <button onClick={deleteItem} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Delete"}</button>
+          <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+          <button onClick={(e) => { e.stopPropagation(); deleteItem(); }} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Delete"}</button>
         </div>
       </div>
 
