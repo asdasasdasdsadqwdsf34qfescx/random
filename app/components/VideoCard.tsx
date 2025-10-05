@@ -35,6 +35,7 @@ export default function VideoCard({ src, title }: VideoCardProps) {
           controls
           muted
           playsInline
+          loop
           className="w-full h-64 object-cover bg-black"
           controlsList="nodownload noremoteplayback"
           disablePictureInPicture
