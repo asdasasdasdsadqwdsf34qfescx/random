@@ -189,7 +189,7 @@ const ModelsPage = () => {
                   <select
                     value={selectTag}
                     onChange={(e) => setSelectTag(e.target.value)}
-                    className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-2 text-sm"
+                    className="bg-white text-slate-900 dark:bg-slate-800 dark:text-white border border-slate-200 dark:border-white/10 rounded-md px-2 py-2 text-sm"
                   >
                     <option value="">Tag</option>
                     {ALLOWED_TAGS.filter((t) => !selectedTags.includes(t)).map((t) => (
