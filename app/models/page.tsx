@@ -7,6 +7,7 @@ import { useSidebar } from "@/app/components/ui/SidebarContext";
 import { ModelCard } from "@/app/components/shared/ModelCard";
 import { LoadingSpinner } from "@/app/components/shared/LoadingSpinner";
 import { EmptyState } from "@/app/components/shared/EmptyState";
+import { ALLOWED_TAGS, ALLOWED_VIDEO_TAGS } from "@/app/constants/tags";
 
 const ModelsPage = () => {
   const router = useRouter();
@@ -17,6 +18,14 @@ const ModelsPage = () => {
   const [search, setSearch] = useState<string>("");
   const [tagsByName, setTagsByName] = useState<Record<string, string[]>>({});
   const [checkedByName, setCheckedByName] = useState<Record<string, boolean>>({});
+
+  // filters
+  const [selectedVideoTags, setSelectedVideoTags] = useState<string[]>([]);
+  const [selectedTags, setSelectedTags] = useState<string[]>([]);
+  const [onlineOnly, setOnlineOnly] = useState<boolean>(false);
+  const [selectVideoTag, setSelectVideoTag] = useState<string>("");
+  const [selectTag, setSelectTag] = useState<string>("");
+  const [itemsByName, setItemsByName] = useState<Record<string, any>>({});
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -38,27 +47,33 @@ const ModelsPage = () => {
   useEffect(() => {
     const fetchCheckedAndTags = async () => {
       try {
-        // Prefer batch data for efficiency
-        const r = await fetch("/api/model/data");
+        const qs = new URLSearchParams();
+        if (selectedVideoTags.length) qs.set("videoTags", selectedVideoTags.join(","));
+        if (selectedTags.length) qs.set("tags", selectedTags.join(","));
+        if (onlineOnly) qs.set("isOnline", "true");
+        const r = await fetch(`/api/model/data${qs.toString() ? `?${qs.toString()}` : ""}`);
         if (r.ok) {
           const j = await r.json();
           const items: any[] = Array.isArray(j?.items) ? j.items : [];
           const nextChecked: Record<string, boolean> = {};
           const nextTags: Record<string, string[]> = {};
+          const nextItems: Record<string, any> = {};
           for (const it of items) {
             const name: string = String(it?.name || it?.modelData?.model?.name || "");
             if (!name) continue;
-            const lower = name.toLowerCase();
             const cm = Array.isArray(it?.modelData?.checkedModel) ? it.modelData.checkedModel : [];
             nextChecked[name] = cm.length > 0;
-            const tags: string[] = [
-              ...((it?.modelData?.model?.tags || []) as string[]),
-              ...((it?.modelData?.model?.videoTags || []) as string[]),
+            const model = it?.modelData?.model || {};
+            const tagsArr: string[] = [
+              ...((model?.tags || []) as string[]),
+              ...((model?.videoTags || []) as string[]),
             ].filter((s) => typeof s === "string");
-            if (tags.length) nextTags[name] = Array.from(new Set(tags));
+            if (tagsArr.length) nextTags[name] = Array.from(new Set(tagsArr));
+            nextItems[name] = model;
           }
           setCheckedByName(nextChecked);
           setTagsByName(nextTags);
+          setItemsByName(nextItems);
           return;
         }
       } catch {}
@@ -76,14 +91,24 @@ const ModelsPage = () => {
       } catch {}
     };
     fetchCheckedAndTags();
-  }, []);
+  }, [selectedVideoTags, selectedTags, onlineOnly]);
 
   const filtered = useMemo(() => {
     const q = search.trim().toLowerCase();
-    const arr = photos.slice().sort((a, b) => a.localeCompare(b));
+    const namesAllowed = new Set(Object.keys(itemsByName));
+    const arr = photos
+      .filter((p) => {
+        const name = p.replace(/\.[^.]+$/, "");
+        if (selectedVideoTags.length || selectedTags.length || onlineOnly) {
+          return namesAllowed.has(name);
+        }
+        return true;
+      })
+      .slice()
+      .sort((a, b) => a.localeCompare(b));
     if (!q) return arr;
     return arr.filter((p) => p.replace(/\.[^.]+$/, "").toLowerCase().includes(q));
-  }, [photos, search]);
+  }, [photos, search, itemsByName, selectedVideoTags, selectedTags, onlineOnly]);
 
 
   return (
@@ -109,6 +134,31 @@ const ModelsPage = () => {
             </div>
           </div>
 
+          { (selectedVideoTags.length > 0 || selectedTags.length > 0 || onlineOnly) && (
+            <div className="mt-4 flex flex-wrap gap-2">
+              {selectedVideoTags.map((t) => (
+                <span key={`vt-${t}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
+                  video:{t}
+                  <button className="opacity-60 hover:opacity-100" onClick={() => setSelectedVideoTags(selectedVideoTags.filter((x) => x !== t))}>×</button>
+                </span>
+              ))}
+              {selectedTags.map((t) => (
+                <span key={`tg-${t}`} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs">
+                  tag:{t}
+                  <button className="opacity-60 hover:opacity-100" onClick={() => setSelectedTags(selectedTags.filter((x) => x !== t))}>×</button>
+                </span>
+              ))}
+              {onlineOnly && (
+                <span className="inline-flex items-center gap-1 px-2 py-1 rounded bg-emerald-100 dark:bg-emerald-900/40 text-xs text-emerald-700 dark:text-emerald-300">
+                  Online only
+                  <button className="opacity-60 hover:opacity-100" onClick={() => setOnlineOnly(false)}>×</button>
+                </span>
+              )}
+              {(selectedVideoTags.length > 0 || selectedTags.length > 0 || onlineOnly) && (
+                <button className="text-xs underline" onClick={() => { setSelectedVideoTags([]); setSelectedTags([]); setOnlineOnly(false); }}>Clear all</button>
+              )}
+            </div>
+          )}
           <div className="mt-6">
             {loading ? (
               <LoadingSpinner />

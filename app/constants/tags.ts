@@ -1,0 +1,31 @@
+export const ALLOWED_VIDEO_TAGS = [
+  "sideways",
+  "backfuck",
+  "masturbate",
+  "dildo",
+  "doggy",
+  "hand",
+  "under",
+  "suck",
+  "close",
+  "scissors",
+  "ride",
+  "lick",
+  "kiss",
+  "body",
+  "pillow",
+] as const;
+
+export const ALLOWED_TAGS = [
+  "model",
+  "lesbian",
+  "quin",
+  "petit",
+  "asian",
+  "moaning",
+  "hairy",
+  "cute",
+  "ideal",
+  "boobs",
+  "ass",
+] as const;

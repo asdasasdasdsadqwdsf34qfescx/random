@@ -7,38 +7,7 @@ import { useSidebar } from "@/app/components/ui/SidebarContext";
 import { useToast } from "@/app/components/ui/ToastContext";
 import { VideoPlayer } from "@/app/components/shared/VideoPlayer";
 
-// Allowed values for selects
-const ALLOWED_VIDEO_TAGS = [
-  "sideways",
-  "backfuck",
-  "masturbate",
-  "dildo",
-  "doggy",
-  "hand",
-  "under",
-  "suck",
-  "close",
-  "scissors",
-  "ride",
-  "lick",
-  "kiss",
-  "body",
-  "pillow",
-];
-
-const ALLOWED_TAGS = [
-  "model",
-  "lesbian",
-  "quin",
-  "petit",
-  "asian",
-  "moaning",
-  "hairy",
-  "cute",
-  "ideal",
-  "boobs",
-  "ass",
-];
+import { ALLOWED_TAGS, ALLOWED_VIDEO_TAGS } from "@/app/constants/tags";
 
 type Model = {
   id: number;
