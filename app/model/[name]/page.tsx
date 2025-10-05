@@ -52,9 +52,20 @@ type Model = {
   [key: string]: any;
 };
 
-type ModelName = { id: number; created_at?: string; name: string; modelId: number };
+type ModelName = {
+  id: number;
+  created_at?: string;
+  name: string;
+  modelId: number;
+};
 
-type CheckedModel = { id: number; created_at?: string; name: string; hasContent: boolean; modelId?: number };
+type CheckedModel = {
+  id: number;
+  created_at?: string;
+  name: string;
+  hasContent: boolean;
+  modelId?: number;
+};
 
 type ModelDataResponse = {
   exists: boolean;
@@ -68,7 +79,8 @@ type ModelDataResponse = {
   };
 };
 
-const arrayFrom = (v: any): string[] => (Array.isArray(v) ? v.filter((x) => typeof x === "string") : []);
+const arrayFrom = (v: any): string[] =>
+  Array.isArray(v) ? v.filter((x) => typeof x === "string") : [];
 
 export default function ModelDetailPage() {
   const { isOpen } = useSidebar();
@@ -98,7 +110,10 @@ export default function ModelDetailPage() {
   const [selectTag, setSelectTag] = useState<string>("");
   const [avatarSrc, setAvatarSrc] = useState<string>("");
   const [videoFilter, setVideoFilter] = useState<string>("");
-  const allTags = useMemo(() => Array.from(new Set([...(videoTags || []), ...(tags || [])])), [videoTags, tags]);
+  const allTags = useMemo(
+    () => Array.from(new Set([...(videoTags || []), ...(tags || [])])),
+    [videoTags, tags]
+  );
 
   const modelNames: ModelName[] = useMemo(
     () => data?.modelData?.modelNames || data?.modelData?.modelNamesData || [],
@@ -117,7 +132,9 @@ export default function ModelDetailPage() {
         if (!res.ok) return;
         const j = await res.json();
         const imgs: string[] = j?.images || [];
-        const candidates = [name, ...modelNames.map((n) => n.name)].map((s) => s.toLowerCase());
+        const candidates = [name, ...modelNames.map((n) => n.name)].map((s) =>
+          s.toLowerCase()
+        );
         const match = imgs.find((img: string) => {
           const base = img.replace(/\.[^.]+$/, "").toLowerCase();
           return candidates.includes(base);
@@ -162,7 +179,11 @@ export default function ModelDetailPage() {
       if (!name) return;
       setVidLoading(true);
       try {
-        const r = await fetch(`/api/videos?name=${encodeURIComponent(name)}${videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""}`);
+        const r = await fetch(
+          `/api/videos?name=${encodeURIComponent(name)}${
+            videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""
+          }`
+        );
         if (!r.ok) throw new Error("Failed to load videos");
         const j = await r.json();
         setVideos(j?.videos || []);
@@ -288,7 +309,9 @@ export default function ModelDetailPage() {
     if (checkedModel) {
       setCmName(checkedModel.name || "");
       setCmHasContent(!!checkedModel.hasContent);
-      setCmModelId(checkedModel.modelId != null ? String(checkedModel.modelId) : "");
+      setCmModelId(
+        checkedModel.modelId != null ? String(checkedModel.modelId) : ""
+      );
     } else {
       setCmName(name);
       setCmHasContent(false);
@@ -301,7 +324,9 @@ export default function ModelDetailPage() {
       setCmBusy(true);
       const payload: any = { name: cmName.trim(), hasContent: cmHasContent };
       if (cmModelId.trim() !== "") payload.modelId = Number(cmModelId);
-      const url = checkedModel ? `/api/checked-models/${checkedModel.id}` : "/api/checked-models";
+      const url = checkedModel
+        ? `/api/checked-models/${checkedModel.id}`
+        : "/api/checked-models";
       const method = checkedModel ? "PUT" : "POST";
       const r = await fetch(url, {
         method,
@@ -322,7 +347,9 @@ export default function ModelDetailPage() {
     if (!confirm("Delete this checked model?")) return;
     try {
       setCmBusy(true);
-      const r = await fetch(`/api/checked-models/${checkedModel.id}`, { method: "DELETE" });
+      const r = await fetch(`/api/checked-models/${checkedModel.id}`, {
+        method: "DELETE",
+      });
       if (!r.ok) throw new Error("delete failed");
       addToast("Deleted", "success");
       await reload();
@@ -336,8 +363,14 @@ export default function ModelDetailPage() {
   const reload = async () => {
     try {
       const [d, v] = await Promise.all([
-        fetch(`/api/model/data/${encodeURIComponent(name)}`).then((r) => r.json()),
-        fetch(`/api/videos?name=${encodeURIComponent(name)}${videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""}`).then((r) => r.json()),
+        fetch(`/api/model/data/${encodeURIComponent(name)}`).then((r) =>
+          r.json()
+        ),
+        fetch(
+          `/api/videos?name=${encodeURIComponent(name)}${
+            videoFilter ? `&filter=${encodeURIComponent(videoFilter)}` : ""
+          }`
+        ).then((r) => r.json()),
       ]);
       setData(d);
       const m = d?.modelData?.model as Model | undefined;
@@ -350,48 +383,48 @@ export default function ModelDetailPage() {
     } catch (_e) {}
   };
 
-  const addArrayItem = (val: string, list: string[], setList: (v: string[]) => void) => {
+  const addArrayItem = (
+    val: string,
+    list: string[],
+    setList: (v: string[]) => void
+  ) => {
     const v = val.trim();
     if (!v) return;
     if (list.includes(v)) return;
     setList([...list, v]);
   };
-  const removeArrayItem = (idx: number, list: string[], setList: (v: string[]) => void) => {
+  const removeArrayItem = (
+    idx: number,
+    list: string[],
+    setList: (v: string[]) => void
+  ) => {
     const next = [...list];
     next.splice(idx, 1);
     setList(next);
   };
 
-  const filteredModelEntries = useMemo(() => {
-    if (!model) return [] as [string, any][];
-    const omit = new Set(["id", "created_at", "imageUrl", "videoTags", "tags"]);
-    return Object.entries(model).filter(([k, v]) => !omit.has(k) && v !== null && v !== undefined);
-  }, [model]);
-
-  const prettyValue = (v: any) => {
-    if (Array.isArray(v)) return v.join(", ");
-    if (typeof v === "boolean") return v ? "Yes" : "No";
-    if (typeof v === "string") return v;
-    if (typeof v === "number") return String(v);
-    try {
-      return JSON.stringify(v);
-    } catch {
-      return String(v);
-    }
-  };
-
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
-      <main className={`py-6 transition-[margin] duration-300 ${isOpen ? "md:ml-64" : "ml-0"}`}>
+      <main
+        className={`py-6 transition-[margin] duration-300 ${
+          isOpen ? "md:ml-64" : "ml-0"
+        }`}
+      >
         <div className="w-full px-4 md:px-6">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">Model: {name}</h1>
-              <p className="text-sm text-slate-600 dark:text-slate-400">View and manage model data, names, checked model and videos.</p>
+              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
+                Model: {name}
+              </h1>
             </div>
             <div className="flex items-center gap-2">
-              <button onClick={() => router.push(`/models`)} className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15">Back to Models</button>
+              <button
+                onClick={() => router.push(`/models`)}
+                className="px-3 py-2 text-sm rounded bg-white/10 hover:bg-white/15"
+              >
+                Back to Models
+              </button>
               <button
                 onClick={() => {
                   if (editMode) {
@@ -418,37 +451,88 @@ export default function ModelDetailPage() {
             <div className="space-y-6">
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center gap-4">
-                  <div className="w-24 h-24 rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
+                  <div className="w-40 h-40- rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
                     {avatarSrc ? (
-                      <img src={avatarSrc} alt={name} className="w-full h-full object-cover" />
+                      <img
+                        src={avatarSrc}
+                        alt={name}
+                        className="w-full h-full object-cover"
+                      />
                     ) : (
-                      (name?.charAt(0)?.toUpperCase() || "?")
+                      name?.charAt(0)?.toUpperCase() || "?"
                     )}
                   </div>
                   <div className="flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <h2 className="text-xl font-semibold">{name}</h2>
                       {isOnline ? (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">Online</span>
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                          Online
+                        </span>
                       ) : (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">Offline</span>
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">
+                          Offline
+                        </span>
                       )}
                       {checkedModel?.hasContent && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">hasContent</span>
+                        <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                          hasContent
+                        </span>
+                      )}
+                      {checkedModel && (
+                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                          <svg
+                            viewBox="0 0 20 20"
+                            className="w-3 h-3"
+                            aria-hidden
+                          >
+                            <path
+                              fill="currentColor"
+                              d="M7.629 13.314a1 1 0 0 1-1.258.062l-.095-.082-2.5-2.5a1 1 0 0 1 1.32-1.497l.094.083L7 10.586l6.439-6.44a1 1 0 0 1 1.497 1.32l-.083.094-7 7-.062.055-.074.054Z"
+                            />
+                          </svg>
+                          Checked
+                        </span>
                       )}
                     </div>
+                    <span className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                      Videos: {videos.length}
+                    </span>
                     <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
-                                            <span>Videos: {videos.length}</span>
+                      {allTags.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>Tags:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {allTags.map((tag) => (
+                              <span
+                                key={tag}
+                                className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
+                              >
+                                {tag}
+                              </span>
+                            ))}
+                          </div>
+                        </div>
+                      )}
                     </div>
-                    {modelNames.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-2">
-                        {modelNames.map((n) => (
-                          <span key={n.id} className="px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-xs text-slate-700 dark:text-slate-200">
-                            {n.name}
-                          </span>
-                        ))}
-                      </div>
-                    )}
+
+                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                      {modelNames.length > 0 && (
+                        <div className="flex items-center gap-1">
+                          <span>Names:</span>
+                          <div className="flex flex-wrap gap-1">
+                            {modelNames.map((name) => (
+                              <span
+                                key={name.id}
+                                className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
+                              >
+                                {name.name}
+                              </span>
+                            ))} 
+                          </div>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </section>
@@ -457,7 +541,11 @@ export default function ModelDetailPage() {
                 <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                   <div className="flex items-center justify-between mb-3">
                     <h2 className="text-lg font-semibold">Model data</h2>
-                    <button onClick={saveModel} disabled={savingModel || !model?.id} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">
+                    <button
+                      onClick={saveModel}
+                      disabled={savingModel || !model?.id}
+                      className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+                    >
                       {savingModel ? "Saving..." : "Save"}
                     </button>
                   </div>
@@ -472,16 +560,32 @@ export default function ModelDetailPage() {
                       <div className="text-sm">{model?.name}</div>
                     </div>
                     <div className="flex items-center gap-2">
-                      <input id="m-online" type="checkbox" checked={isOnline} onChange={(e) => setIsOnline(e.target.checked)} />
-                      <label htmlFor="m-online" className="text-sm">Is online</label>
+                      <input
+                        id="m-online"
+                        type="checkbox"
+                        checked={isOnline}
+                        onChange={(e) => setIsOnline(e.target.checked)}
+                      />
+                      <label htmlFor="m-online" className="text-sm">
+                        Is online
+                      </label>
                     </div>
                     <div>
                       <label className="block text-sm mb-1">Image URL</label>
-                      <input value={imageUrl} onChange={(e) => setImageUrl(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                      <input
+                        value={imageUrl}
+                        onChange={(e) => setImageUrl(e.target.value)}
+                        className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                      />
                     </div>
                     <div>
                       <label className="block text-sm mb-1">Started at</label>
-                      <input type="datetime-local" value={startedAt} onChange={(e) => setStartedAt(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
+                      <input
+                        type="datetime-local"
+                        value={startedAt}
+                        onChange={(e) => setStartedAt(e.target.value)}
+                        className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                      />
                     </div>
                   </div>
 
@@ -495,14 +599,22 @@ export default function ModelDetailPage() {
                           className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
                         >
                           <option value="">Select tag</option>
-                          {ALLOWED_VIDEO_TAGS.filter((t) => !videoTags.includes(t)).map((t) => (
-                            <option key={t} value={t}>{t}</option>
+                          {ALLOWED_VIDEO_TAGS.filter(
+                            (t) => !videoTags.includes(t)
+                          ).map((t) => (
+                            <option key={t} value={t}>
+                              {t}
+                            </option>
                           ))}
                         </select>
                         <button
                           type="button"
                           onClick={() => {
-                            addArrayItem(selectVideoTag, videoTags, setVideoTags);
+                            addArrayItem(
+                              selectVideoTag,
+                              videoTags,
+                              setVideoTags
+                            );
                             setSelectVideoTag("");
                           }}
                           disabled={!selectVideoTag}
@@ -513,10 +625,23 @@ export default function ModelDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {videoTags.map((t, i) => (
-                          <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
+                          <span
+                            key={`${t}-${i}`}
+                            onClick={() => setVideoFilter(t)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                          >
                             {t}
                             {editMode && (
-                              <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, videoTags, setVideoTags); }} className="text-slate-500 hover:text-slate-800">×</button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeArrayItem(i, videoTags, setVideoTags);
+                                }}
+                                className="text-slate-500 hover:text-slate-800"
+                              >
+                                ×
+                              </button>
                             )}
                           </span>
                         ))}
@@ -531,9 +656,13 @@ export default function ModelDetailPage() {
                           className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
                         >
                           <option value="">Select tag</option>
-                          {ALLOWED_TAGS.filter((t) => !tags.includes(t)).map((t) => (
-                            <option key={t} value={t}>{t}</option>
-                          ))}
+                          {ALLOWED_TAGS.filter((t) => !tags.includes(t)).map(
+                            (t) => (
+                              <option key={t} value={t}>
+                                {t}
+                              </option>
+                            )
+                          )}
                         </select>
                         <button
                           type="button"
@@ -549,10 +678,23 @@ export default function ModelDetailPage() {
                       </div>
                       <div className="flex flex-wrap gap-2">
                         {tags.map((t, i) => (
-                          <span key={`${t}-${i}`} onClick={() => setVideoFilter(t)} className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900">
+                          <span
+                            key={`${t}-${i}`}
+                            onClick={() => setVideoFilter(t)}
+                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900"
+                          >
                             {t}
                             {editMode && (
-                              <button type="button" onClick={(e) => { e.stopPropagation(); removeArrayItem(i, tags, setTags); }} className="text-slate-500 hover:text-slate-800">×</button>
+                              <button
+                                type="button"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  removeArrayItem(i, tags, setTags);
+                                }}
+                                className="text-slate-500 hover:text-slate-800"
+                              >
+                                ×
+                              </button>
                             )}
                           </span>
                         ))}
@@ -564,102 +706,179 @@ export default function ModelDetailPage() {
 
               {/* Checked model */}
               {editMode && (
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Checked model</h2>
-                  {editMode && (
-                    <div className="flex items-center gap-2">
-                      {checkedModel && (
-                        <button onClick={deleteCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
-                      )}
-                      <button onClick={saveCheckedModel} disabled={cmBusy} className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">{cmBusy ? "Saving..." : checkedModel ? "Save" : "Create"}</button>
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold">Checked model</h2>
+                    {editMode && (
+                      <div className="flex items-center gap-2">
+                        {checkedModel && (
+                          <button
+                            onClick={deleteCheckedModel}
+                            disabled={cmBusy}
+                            className="px-3 py-1.5 text-sm rounded bg-red-500/20 hover:bg-red-500/30"
+                          >
+                            Delete
+                          </button>
+                        )}
+                        <button
+                          onClick={saveCheckedModel}
+                          disabled={cmBusy}
+                          className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          {cmBusy
+                            ? "Saving..."
+                            : checkedModel
+                            ? "Save"
+                            : "Create"}
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {!editMode ? (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div>
+                        <div className="text-xs text-slate-500">Name</div>
+                        <div>{cmName || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500">Model ID</div>
+                        <div>{cmModelId || "-"}</div>
+                      </div>
+                      <div>
+                        <div className="text-xs text-slate-500">
+                          Has content
+                        </div>
+                        <div>{cmHasContent ? "Yes" : "No"}</div>
+                      </div>
+                    </div>
+                  ) : (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                      <div>
+                        <label className="block text-sm mb-1">Name</label>
+                        <input
+                          value={cmName}
+                          onChange={(e) => setCmName(e.target.value)}
+                          className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Model ID</label>
+                        <input
+                          value={cmModelId}
+                          onChange={(e) => setCmModelId(e.target.value)}
+                          inputMode="numeric"
+                          className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        />
+                      </div>
+                      <div className="flex items-center gap-2 mt-6 md:mt-0">
+                        <input
+                          id="cm-has"
+                          type="checkbox"
+                          checked={cmHasContent}
+                          onChange={(e) => setCmHasContent(e.target.checked)}
+                        />
+                        <label htmlFor="cm-has" className="text-sm">
+                          Has content
+                        </label>
+                      </div>
                     </div>
                   )}
-                </div>
-                {!editMode ? (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                    <div>
-                      <div className="text-xs text-slate-500">Name</div>
-                      <div>{cmName || "-"}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500">Model ID</div>
-                      <div>{cmModelId || "-"}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500">Has content</div>
-                      <div>{cmHasContent ? "Yes" : "No"}</div>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div>
-                      <label className="block text-sm mb-1">Name</label>
-                      <input value={cmName} onChange={(e) => setCmName(e.target.value)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                    </div>
-                    <div>
-                      <label className="block text-sm mb-1">Model ID</label>
-                      <input value={cmModelId} onChange={(e) => setCmModelId(e.target.value)} inputMode="numeric" className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                    </div>
-                    <div className="flex items-center gap-2 mt-6 md:mt-0">
-                      <input id="cm-has" type="checkbox" checked={cmHasContent} onChange={(e) => setCmHasContent(e.target.checked)} />
-                      <label htmlFor="cm-has" className="text-sm">Has content</label>
-                    </div>
-                  </div>
-                )}
-              </section>
+                </section>
               )}
 
               {/* Model names */}
               {editMode && (
-              <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                <div className="flex items-center justify-between mb-3">
-                  <h2 className="text-lg font-semibold">Model names</h2>
-                  {editMode && (
-                    <div className="flex items-center gap-2">
-                      <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm" />
-                      <button onClick={addModelName} disabled={!newName.trim() || !checkedModel} className="px-3 py-2 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
+                  <div className="flex items-center justify-between mb-3">
+                    <h2 className="text-lg font-semibold">Model names</h2>
+                    {editMode && (
+                      <div className="flex items-center gap-2">
+                        <input
+                          value={newName}
+                          onChange={(e) => setNewName(e.target.value)}
+                          placeholder="Add new name"
+                          className="bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        />
+                        <button
+                          onClick={addModelName}
+                          disabled={!newName.trim() || !checkedModel}
+                          className="px-3 py-2 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
+                        >
+                          Add
+                        </button>
+                      </div>
+                    )}
+                  </div>
+                  {(modelNames || []).length === 0 ? (
+                    <div className="text-sm text-slate-600">No names.</div>
+                  ) : (
+                    <div className="space-y-2">
+                      {modelNames.map((n) => (
+                        <div key={n.id} className="flex items-center gap-2">
+                          {editMode && editNameId === n.id ? (
+                            <>
+                              <input
+                                value={editNameVal}
+                                onChange={(e) => setEditNameVal(e.target.value)}
+                                className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1 text-sm"
+                              />
+                              <button
+                                type="button"
+                                onClick={() => saveModelName(n.id)}
+                                disabled={!!nameBusy[n.id]}
+                                className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
+                              >
+                                Save
+                              </button>
+                              <button
+                                type="button"
+                                onClick={cancelEditModelName}
+                                className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15"
+                              >
+                                Cancel
+                              </button>
+                            </>
+                          ) : (
+                            <>
+                              <div className="flex-1 text-sm">{n.name}</div>
+                              {editMode && (
+                                <>
+                                  <button
+                                    type="button"
+                                    onClick={() => startEditModelName(n)}
+                                    className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15"
+                                  >
+                                    Edit
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => deleteModelName(n.id)}
+                                    disabled={!!nameBusy[n.id]}
+                                    className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30"
+                                  >
+                                    Delete
+                                  </button>
+                                </>
+                              )}
+                            </>
+                          )}
+                        </div>
+                      ))}
                     </div>
                   )}
-                </div>
-                {(modelNames || []).length === 0 ? (
-                  <div className="text-sm text-slate-600">No names.</div>
-                ) : (
-                  <div className="space-y-2">
-                    {modelNames.map((n) => (
-                      <div key={n.id} className="flex items-center gap-2">
-                        {editMode && editNameId === n.id ? (
-                          <>
-                            <input value={editNameVal} onChange={(e) => setEditNameVal(e.target.value)} className="flex-1 bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-2 py-1 text-sm" />
-                            <button type="button" onClick={() => saveModelName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
-                            <button type="button" onClick={cancelEditModelName} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Cancel</button>
-                          </>
-                        ) : (
-                          <>
-                            <div className="flex-1 text-sm">{n.name}</div>
-                            {editMode && (
-                              <>
-                                <button type="button" onClick={() => startEditModelName(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
-                                <button type="button" onClick={() => deleteModelName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
-                              </>
-                            )}
-                          </>
-                        )}
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </section>
+                </section>
               )}
 
               {/* Videos */}
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-3 flex-wrap">
-                    <h2 className="text-lg font-semibold">Videos ({videos.length})</h2>
+                    <h2 className="text-lg font-semibold">
+                      Videos ({videos.length})
+                    </h2>
                     {allTags.length > 0 && (
                       <div className="flex flex-wrap gap-2">
-                        {allTags.map((t) => (
+                        {videoTags.map((t) => (
                           <button
                             key={`header-tag-${t}`}
                             type="button"
@@ -674,15 +893,24 @@ export default function ModelDetailPage() {
                   </div>
                   {videoFilter && (
                     <div className="flex items-center gap-2">
-                      <span className="text-sm text-slate-600 dark:text-slate-400">Filter: {videoFilter}</span>
-                      <button onClick={() => setVideoFilter("")} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Clear</button>
+                      <span className="text-sm text-slate-600 dark:text-slate-400">
+                        Filter: {videoFilter}
+                      </span>
+                      <button
+                        onClick={() => setVideoFilter("")}
+                        className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15"
+                      >
+                        Clear
+                      </button>
                     </div>
                   )}
                 </div>
                 {vidLoading ? (
                   <div className="text-sm text-slate-500">Loading...</div>
                 ) : videos.length === 0 ? (
-                  <div className="text-sm text-slate-600">No videos for this model.</div>
+                  <div className="text-sm text-slate-600">
+                    No videos for this model.
+                  </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                     {videos.map((video) => (
@@ -691,7 +919,9 @@ export default function ModelDetailPage() {
                           src={`/videos/${encodeURIComponent(name)}/${video}`}
                           className="w-full"
                         />
-                        <p className="mt-2 text-sm text-slate-500 truncate">{video}</p>
+                        <p className="mt-2 text-sm text-slate-500 truncate">
+                          {video}
+                        </p>
                       </div>
                     ))}
                   </div>
