@@ -7,14 +7,17 @@ export async function GET() {
     const remote = await callRemote("/checked-models/available-models", { method: "GET" });
     if (remote) {
       const data = await remote.json();
-      return NextResponse.json(data, { status: remote.status });
+      const normalized = Array.isArray(data)
+        ? data.filter((m: any) => typeof m?.id === "number" && typeof m?.name === "string").map((m: any) => ({ id: m.id, name: m.name }))
+        : [];
+      return NextResponse.json(normalized, { status: 200 });
     }
 
     const local = await getLocalModels().catch(() => [] as any[]);
     const normalized = Array.isArray(local)
       ? local
           .filter((m: any) => typeof m?.id === "number" && typeof m?.name === "string")
-          .map((m: any) => ({ id: m.id, name: m.name, imageUrl: typeof m.imageUrl === "string" ? m.imageUrl : "", isOnline: !!m.isOnline }))
+          .map((m: any) => ({ id: m.id, name: m.name }))
       : [];
     return NextResponse.json(normalized, { status: 200 });
   } catch (e: any) {
