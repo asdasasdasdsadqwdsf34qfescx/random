@@ -641,10 +641,13 @@ export default function ModelDetailPage() {
                   <div className="text-sm text-slate-600">No videos for this model.</div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                    {videos.map((video, idx) => (
-                      <div key={`${video}-${idx}`} className="rounded shadow bg-black/80 p-2 flex flex-col items-center">
-                        <VideoPlayer className="w-full max-w-full bg-black/80" style={{ height: "300px", width: "100%" }} src={`/videos/${encodeURIComponent(name)}/${video}`} />
-                        <div className="text-xs text-gray-400 mt-2 break-all">{video}</div>
+                    {videos.map((video) => (
+                      <div key={video}>
+                        <VideoPlayer
+                          src={`/videos/${encodeURIComponent(name)}/${video}`}
+                          className="w-full"
+                        />
+                        <p className="mt-2 text-sm text-slate-500 truncate">{video}</p>
                       </div>
                     ))}
                   </div>
