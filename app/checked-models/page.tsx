@@ -172,6 +172,21 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const [saving, setSaving] = useState(false);
   const valid = name.trim().length > 0 && /^(?:0|[1-9]\d*)$/.test(modelId);
 
+  type ModelOption = { id: number; name: string };
+  const [modelSearch, setModelSearch] = useState("");
+  const { data: allModels, isLoading: modelsLoading, error: modelsError } = useSWR<ModelOption[]>(mode === "create" ? "/api/models" : null, fetcher, { revalidateOnFocus: false });
+  const filteredModels = useMemo(() => {
+    const term = modelSearch.trim().toLowerCase();
+    const list = allModels || [];
+    if (!term) return list;
+    return list.filter(m => m.name.toLowerCase().includes(term) || String(m.id) === term);
+  }, [allModels, modelSearch]);
+
+  const pickModel = (m: ModelOption) => {
+    setName(m.name);
+    setModelId(String(m.id));
+  };
+
   const submit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!valid) return;
@@ -193,9 +208,50 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   return (
     <div className="fixed inset-0 z-[70] flex items-center justify-center">
       <div className="absolute inset-0 bg-black/60" onClick={onClose} />
-      <div className="relative w-full max-w-md bg-gray-900 rounded-lg border border-white/10 p-4">
+      <div className="relative w-full max-w-xl bg-gray-900 rounded-lg border border-white/10 p-4">
         <h2 className="text-lg font-semibold mb-3">{mode === "create" ? "Adaugă model" : "Editează model"}</h2>
-        <form onSubmit={submit} className="space-y-3">
+        <form onSubmit={submit} className="space-y-4">
+          {mode === "create" && (
+            <div className="rounded-md border border-white/10">
+              <div className="px-3 py-2 border-b border-white/10 flex items-center justify-between">
+                <div className="text-sm font-medium">Alege din modelele existente</div>
+              </div>
+              <div className="p-3 space-y-2">
+                <input
+                  type="search"
+                  placeholder="Caută model după nume sau ID..."
+                  className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500"
+                  value={modelSearch}
+                  onChange={(e) => setModelSearch(e.target.value)}
+                />
+                <div className="max-h-64 overflow-auto rounded border border-white/10 divide-y divide-white/10">
+                  {modelsLoading && (
+                    <div className="p-3 text-sm text-white/60">Se încarcă...</div>
+                  )}
+                  {modelsError && (
+                    <div className="p-3 text-sm text-red-300">Eroare la încărcarea listei.</div>
+                  )}
+                  {!modelsLoading && !modelsError && (filteredModels.length === 0 ? (
+                    <div className="p-3 text-sm text-white/60">Niciun model găsit.</div>
+                  ) : (
+                    filteredModels.map((m) => (
+                      <button
+                        type="button"
+                        key={m.id}
+                        onClick={() => pickModel(m)}
+                        className="w-full text-left px-3 py-2 hover:bg-white/10 focus:bg-white/10"
+                        title={`#${m.id}`}
+                      >
+                        <div className="font-medium">{m.name}</div>
+                        <div className="text-xs text-white/50">ID: {m.id}</div>
+                      </button>
+                    ))
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+
           <div>
             <label className="block text-sm mb-1">Nume</label>
             <input value={name} onChange={(e) => setName(e.target.value)} className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
