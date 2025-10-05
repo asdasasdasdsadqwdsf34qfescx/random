@@ -6,7 +6,7 @@ export interface CheckedModel {
   name: string;
   created_at: string;
   hasContent: boolean;
-  modelId: number;
+  modelId?: number;
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -63,11 +63,14 @@ export function getByModelId(modelId: number): CheckedModel[] {
   return items.filter((i) => i.modelId === modelId);
 }
 
-export function create(input: { name: string; hasContent: boolean; modelId: number }): CheckedModel {
+export function create(input: { name: string; hasContent: boolean; modelId?: number }): CheckedModel {
   const data = readRaw();
   const id = (data.lastId || 0) + 1;
   const now = new Date().toISOString();
-  const item: CheckedModel = { id, name: String(input.name), hasContent: Boolean(input.hasContent), modelId: Number(input.modelId), created_at: now };
+  const base: CheckedModel = { id, name: String(input.name), hasContent: Boolean(input.hasContent), created_at: now };
+  const item: CheckedModel = input.modelId !== undefined
+    ? { ...base, modelId: Number(input.modelId) }
+    : base;
   data.items.push(item);
   data.lastId = id;
   writeRaw(data);

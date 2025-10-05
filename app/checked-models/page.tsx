@@ -11,7 +11,7 @@ interface CheckedModel {
   name: string;
   created_at: string;
   hasContent: boolean;
-  modelId: number;
+  modelId?: number;
 }
 
 type HasContentFilter = "all" | "true" | "false";
@@ -41,7 +41,7 @@ export default function CheckedModelsPage() {
     return (data || []).filter((i) =>
       i.name.toLowerCase().includes(term) ||
       String(i.id) === term ||
-      String(i.modelId) === term
+      (i.modelId !== undefined && String(i.modelId) === term)
     );
   }, [data, search]);
 
@@ -156,7 +156,7 @@ function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
         <div className="font-medium">{item.name}</div>
         <div className="text-xs text-white/50">#{item.id}</div>
       </div>
-      <div className="col-span-2">{item.modelId}</div>
+      <div className="col-span-2">{item.modelId ?? "-"}</div>
       <div className="col-span-2">
         <span className={`px-2 py-1 rounded text-xs ${item.hasContent ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
           {item.hasContent ? "Da" : "Nu"}
@@ -176,7 +176,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const [modelId, setModelId] = useState(item?.modelId?.toString() || "");
   const [hasContent, setHasContent] = useState(item?.hasContent || false);
   const [saving, setSaving] = useState(false);
-  const valid = name.trim().length > 0 && /^(?:0|[1-9]\d*)$/.test(modelId);
+  const valid = name.trim().length > 0 && (modelId.trim() === "" || /^(?:0|[1-9]\d*)$/.test(modelId));
 
   const { addToast } = useToast();
   type ModelOption = { id: number; name: string };
@@ -200,7 +200,8 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
     if (!valid) return;
     try {
       setSaving(true);
-      const payload = { name: name.trim(), hasContent, modelId: Number(modelId) };
+      const payload: any = { name: name.trim(), hasContent };
+      if (modelId.trim() !== "") payload.modelId = Number(modelId);
       const r = await fetch(mode === "create" ? "/api/checked-models" : `/api/checked-models/${item!.id}` , {
         method: mode === "create" ? "POST" : "PUT",
         headers: { "Content-Type": "application/json" },
