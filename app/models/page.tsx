@@ -78,7 +78,7 @@ const ModelsPage = () => {
                       photo={photo}
                       basePath="photos"
                       onPhotoClick={() => router.push(`/model/${encodeURIComponent(name)}`)}
-                      onMiddleClick={() => window.open(`/videos/${encodeURIComponent(name)}`, "_blank")}
+                      onMiddleClick={() => window.open(`/model/${encodeURIComponent(name)}`, "_blank")}
                     />
                   );
                 })}
