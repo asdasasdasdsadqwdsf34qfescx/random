@@ -15,6 +15,8 @@ const ModelsPage = () => {
   const [photos, setPhotos] = useState<string[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [search, setSearch] = useState<string>("");
+  const [tagsByName, setTagsByName] = useState<Record<string, string[]>>({});
+  const [checkedByName, setCheckedByName] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     const fetchPhotos = async () => {
@@ -39,6 +41,34 @@ const ModelsPage = () => {
     if (!q) return arr;
     return arr.filter((p) => p.replace(/\.[^.]+$/, "").toLowerCase().includes(q));
   }, [photos, search]);
+
+  useEffect(() => {
+    const controller = new AbortController();
+    const loadMeta = async () => {
+      const names = filtered.map((p) => p.replace(/\.[^.]+$/, ""));
+      const toFetch = names.filter((n) => !(n in tagsByName) || !(n in checkedByName));
+      const limited = toFetch.slice(0, 48);
+      await Promise.all(
+        limited.map(async (n) => {
+          try {
+            const r = await fetch(`/api/model/data/${encodeURIComponent(n)}`, { signal: controller.signal });
+            if (!r.ok) return;
+            const j = await r.json();
+            const videoTags: string[] = Array.isArray(j?.modelData?.model?.videoTags)
+              ? j.modelData.model.videoTags.filter((x: any) => typeof x === "string")
+              : [];
+            const hasChecked = Array.isArray(j?.modelData?.checkedModel) && j.modelData.checkedModel.length > 0;
+            setTagsByName((prev) => (prev[n] ? prev : { ...prev, [n]: videoTags }));
+            setCheckedByName((prev) => (n in prev ? prev : { ...prev, [n]: hasChecked }));
+          } catch (_) {
+            // ignore
+          }
+        })
+      );
+    };
+    if (filtered.length > 0) loadMeta();
+    return () => controller.abort();
+  }, [filtered, tagsByName, checkedByName]);
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
@@ -72,11 +102,15 @@ const ModelsPage = () => {
               <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-6 gap-4 md:gap-6">
                 {filtered.map((photo) => {
                   const name = photo.replace(/\.[^.]+$/, "");
+                  const tags = tagsByName[name] || [];
+                  const checked = !!checkedByName[name];
                   return (
                     <ModelCard
                       key={photo}
                       photo={photo}
                       basePath="photos"
+                      tags={tags}
+                      checked={checked}
                       onPhotoClick={() => router.push(`/model/${encodeURIComponent(name)}`)}
                       onMiddleClick={() => window.open(`/model/${encodeURIComponent(name)}`, "_blank")}
                     />

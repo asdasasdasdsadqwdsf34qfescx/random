@@ -5,9 +5,11 @@ interface ModelCardProps {
   basePath: string;
   onPhotoClick: (photo: string) => void;
   onMiddleClick?: (photo: string) => void;
+  tags?: string[];
+  checked?: boolean;
 }
 
-export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick }: ModelCardProps) => (
+export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick, tags = [], checked = false }: ModelCardProps) => (
   <div
     role="button"
     tabIndex={0}
@@ -33,6 +35,13 @@ export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick }: Mode
         fill
         className="object-cover group-hover:scale-105 transition-transform duration-300"
       />
+      {checked && (
+        <div className="absolute top-2 right-2 w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md">
+          <svg viewBox="0 0 20 20" className="w-4 h-4" aria-hidden>
+            <path fill="currentColor" d="M7.629 13.314a1 1 0 0 1-1.258.062l-.095-.082-2.5-2.5a1 1 0 0 1 1.32-1.497l.094.083L7 10.586l6.439-6.44a1 1 0 0 1 1.497 1.32l-.083.094-7 7-.062.055-.074.054Z" />
+          </svg>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-black/30 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
       <div className="absolute bottom-2 left-2 right-2 pointer-events-none">
         <p className="text-sm font-medium text-white drop-shadow truncate">
@@ -40,5 +49,16 @@ export const ModelCard = ({ photo, basePath, onPhotoClick, onMiddleClick }: Mode
         </p>
       </div>
     </div>
+    {tags.length > 0 && (
+      <div className="px-2 py-2 border-t border-slate-200 dark:border-slate-800 bg-white/60 dark:bg-slate-900/60">
+        <div className="flex flex-wrap gap-1.5">
+          {tags.map((t, i) => (
+            <span key={`${t}-${i}`} className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-[10px] leading-3 text-slate-700 dark:text-slate-200">
+              {t}
+            </span>
+          ))}
+        </div>
+      </div>
+    )}
   </div>
 );
