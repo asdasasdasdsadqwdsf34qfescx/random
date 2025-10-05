@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "@/app/components/Sidebar";
 import { useSidebar } from "@/app/components/ui/SidebarContext";
 import { ModelCard } from "@/app/components/shared/ModelCard";
