@@ -10,7 +10,7 @@ const AllVideosPage = () => {
       setLoading(true);
       try {
         const res = await fetch("/api/allvideos");
-        if (!res.ok) throw new Error("Nu s-au putut încărca videourile");
+        if (!res.ok) throw new Error("Could not load videos");
         const data = await res.json();
         setAllVideos(data.allVideos ?? []);
       } catch (err) {
@@ -24,9 +24,9 @@ const AllVideosPage = () => {
 
   return (
     <div className="py-6">
-      <h1 className="text-2xl font-bold mb-6">Toate videourile</h1>
+      <h1 className="text-2xl font-bold mb-6">All videos</h1>
       {loading && <p>Loading...</p>}
-      {!loading && allVideos.length === 0 && <p>Nu există videouri.</p>}
+      {!loading && allVideos.length === 0 && <p>No videos.</p>}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {allVideos.map((item, idx) => (
           <div key={idx} className="rounded shadow bg-black/80 p-2 flex flex-col items-center">
