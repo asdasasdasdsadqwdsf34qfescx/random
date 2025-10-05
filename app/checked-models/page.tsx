@@ -136,39 +136,140 @@ export default function CheckedModelsPage() {
 
 function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
   const [busy, setBusy] = useState(false);
+  const [expanded, setExpanded] = useState(false);
   const { addToast } = useToast();
+
+  const { data: namesData, isLoading: namesLoading, error: namesError, mutate: refetchNames } = useSWR<ModelNameItem[]>(
+    expanded ? `/api/model-names/by-checked-model/${item.id}` : null,
+    fetcher,
+    { revalidateOnFocus: false }
+  );
+
   const deleteItem = async () => {
     if (!confirm(`Delete model #${item.id}?`)) return;
     try {
       setBusy(true);
       const r = await fetch(`/api/checked-models/${item.id}`, { method: "DELETE" });
       if (!r.ok) throw new Error("Fail");
+      await mutate(`/api/checked-models`);
     } catch (_e) {
       addToast("Delete failed.", "error");
     } finally {
       setBusy(false);
     }
   };
-  useEffect(() => {
-    if (!busy) return;
-  }, [busy]);
+
+  // Inline names CRUD
+  const [newName, setNewName] = useState("");
+  const [editId, setEditId] = useState<number | null>(null);
+  const [editVal, setEditVal] = useState("");
+  const [nameBusy, setNameBusy] = useState<Record<string, boolean>>({});
+
+  const addName = async () => {
+    const val = newName.trim();
+    if (!val) return;
+    try {
+      setNameBusy((b) => ({ ...b, add: true }));
+      const r = await fetch(`/api/model-names`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: val, modelId: item.id }) });
+      if (!r.ok) throw new Error("add failed");
+      setNewName("");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not add name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, add: false }));
+    }
+  };
+  const startEdit = (n: ModelNameItem) => { setEditId(n.id); setEditVal(n.name); };
+  const cancelEdit = () => { setEditId(null); setEditVal(""); };
+  const saveEdit = async (id: number) => {
+    try {
+      setNameBusy((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ name: editVal.trim() }) });
+      if (!r.ok) throw new Error("edit failed");
+      setEditId(null);
+      setEditVal("");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not save name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, [id]: false }));
+    }
+  };
+  const deleteName = async (id: number) => {
+    if (!confirm("Delete this name?")) return;
+    try {
+      setNameBusy((b) => ({ ...b, [id]: true }));
+      const r = await fetch(`/api/model-names/${id}`, { method: "DELETE" });
+      if (!r.ok) throw new Error("delete failed");
+      await refetchNames();
+      await mutate(`/api/checked-models`);
+    } catch (_e) {
+      addToast("Could not delete name.", "error");
+    } finally {
+      setNameBusy((b) => ({ ...b, [id]: false }));
+    }
+  };
+
   return (
-    <div className="grid grid-cols-12 items-center px-4 py-3">
-      <div className="col-span-4">
-        <div className="font-medium">{item.name}</div>
-        <div className="text-xs text-white/50">#{item.id}</div>
+    <div className="px-4 py-1">
+      <div className="grid grid-cols-12 items-center py-2">
+        <div className="col-span-4">
+          <button onClick={() => setExpanded((v) => !v)} className="flex items-center gap-2 font-medium hover:underline">
+            <span className={`inline-block transition-transform ${expanded ? "rotate-90" : "rotate-0"}`}>▶</span>
+            {item.name}
+          </button>
+          <div className="text-xs text-white/50">#{item.id}</div>
+        </div>
+        <div className="col-span-2">{item.modelId ?? "-"}</div>
+        <div className="col-span-2">
+          <span className={`px-2 py-1 rounded text-xs ${item.hasContent ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
+            {item.hasContent ? "Yes" : "No"}
+          </span>
+        </div>
+        <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
+        <div className="col-span-2 text-right flex items-center justify-end gap-2">
+          <button onClick={onEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+          <button onClick={deleteItem} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Delete"}</button>
+        </div>
       </div>
-      <div className="col-span-2">{item.modelId ?? "-"}</div>
-      <div className="col-span-2">
-        <span className={`px-2 py-1 rounded text-xs ${item.hasContent ? "bg-green-500/20 text-green-300" : "bg-yellow-500/20 text-yellow-300"}`}>
-          {item.hasContent ? "Yes" : "No"}
-        </span>
-      </div>
-      <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
-      <div className="col-span-2 text-right flex items-center justify-end gap-2">
-        <button onClick={onEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
-        <button onClick={deleteItem} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30" disabled={busy}>{busy ? "..." : "Delete"}</button>
-      </div>
+
+      {expanded && (
+        <div className="col-span-12 rounded-md bg-white/5 border border-white/10 p-3 mt-2">
+          <div className="text-sm font-medium mb-2">Names</div>
+          {namesLoading ? (
+            <div className="text-sm text-white/60">Loading...</div>
+          ) : namesError ? (
+            <div className="text-sm text-red-300">Could not load names.</div>
+          ) : (
+            <div className="space-y-2">
+              {(namesData ?? item.names ?? []).map((n) => (
+                <div key={n.id} className="flex items-center gap-2">
+                  {editId === n.id ? (
+                    <>
+                      <input value={editVal} onChange={(e) => setEditVal(e.target.value)} className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+                      <button type="button" onClick={() => saveEdit(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50">Save</button>
+                      <button type="button" onClick={cancelEdit} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Cancel</button>
+                    </>
+                  ) : (
+                    <>
+                      <div className="flex-1 text-sm">{n.name}</div>
+                      <button type="button" onClick={() => startEdit(n)} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
+                      <button type="button" onClick={() => deleteName(n.id)} disabled={!!nameBusy[n.id]} className="px-2 py-1 text-xs rounded bg-red-500/20 hover:bg-red-500/30">Delete</button>
+                    </>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
+          <div className="flex items-center gap-2 pt-3">
+            <input value={newName} onChange={(e) => setNewName(e.target.value)} placeholder="Add new name" className="flex-1 bg-white/5 border border-white/10 rounded-md px-2 py-1 text-sm" />
+            <button type="button" onClick={addName} disabled={!newName.trim() || !!nameBusy.add} className="px-3 py-1.5 text-xs rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50">Add</button>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
