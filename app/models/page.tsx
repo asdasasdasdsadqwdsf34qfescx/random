@@ -39,7 +39,7 @@ const ModelsPage = () => {
     const fetchCheckedAndTags = async () => {
       try {
         // Prefer batch data for efficiency
-        const r = await fetch("/api/models/data");
+        const r = await fetch("/api/model/data");
         if (r.ok) {
           const j = await r.json();
           const items: any[] = Array.isArray(j?.items) ? j.items : [];
