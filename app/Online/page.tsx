@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, memo } from "react";
+import Link from "next/link";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
 import { VideoModel } from "@/app/types";
@@ -86,8 +87,17 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
           />
         )}
       </div>
-      <div className="p-3">
+      <div className="p-3 flex items-center justify-between gap-2">
         <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate" title={model.name}>{model.name}</h3>
+        <Link
+          href={`/Online/${encodeURIComponent(model.name)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="shrink-0 px-2 py-1 rounded-md text-sm bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+          aria-label={`Open ${model.name} in new tab`}
+        >
+          Open
+        </Link>
       </div>
     </article>
   );
@@ -103,11 +113,13 @@ const OnlinePage = () => {
   const { isOpen } = useSidebar();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
+  const [onlyFavorite, setOnlyFavorite] = useState(false);
+  const [sourceChaturbate, setSourceChaturbate] = useState(false);
 
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels();
+      const onlineModels = await getOnlineModels({ favorite: onlyFavorite, source: sourceChaturbate ? "chaturbate" : undefined });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
@@ -133,7 +145,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, []);
+  }, [onlyFavorite, sourceChaturbate]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -173,6 +185,22 @@ const OnlinePage = () => {
                 placeholder="Search by name…"
                 className="w-56 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
               />
+              <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <input
+                  type="checkbox"
+                  checked={onlyFavorite}
+                  onChange={(e) => setOnlyFavorite(e.target.checked)}
+                />
+                Favorite
+              </label>
+              <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <input
+                  type="checkbox"
+                  checked={sourceChaturbate}
+                  onChange={(e) => setSourceChaturbate(e.target.checked)}
+                />
+                Chaturbate
+              </label>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
