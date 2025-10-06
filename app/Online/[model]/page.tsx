@@ -21,6 +21,19 @@ const OnlineModelPage = () => {
 
   useEffect(() => {
     let active = true;
+
+    const hydrateFromSnapshot = () => {
+      if (!modelParam) return;
+      try {
+        const key = `modelSnapshot:${decodeURIComponent(modelParam)}`;
+        const raw = localStorage.getItem(key);
+        if (raw) {
+          const parsed = JSON.parse(raw) as Partial<VideoModel> & { ts?: number };
+          setData((prev) => ({ ...(prev || {}), ...(parsed as VideoModel) }));
+        }
+      } catch {}
+    };
+
     const run = async () => {
       if (!modelParam) return;
       setLoading(true);
@@ -36,6 +49,8 @@ const OnlineModelPage = () => {
         if (active) setLoading(false);
       }
     };
+
+    hydrateFromSnapshot();
     run();
     return () => {
       active = false;
