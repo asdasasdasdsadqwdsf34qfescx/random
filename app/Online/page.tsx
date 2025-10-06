@@ -148,6 +148,12 @@ const OnlinePage = () => {
     }
     const s = searchParams?.get?.("status");
     setStatus(s || undefined);
+    const pStr = searchParams?.get?.("page");
+    const lStr = searchParams?.get?.("limit");
+    const pNum = pStr ? parseInt(pStr, 10) : NaN;
+    const lNum = lStr ? parseInt(lStr, 10) : NaN;
+    if (!Number.isNaN(pNum) && pNum > 0) setPage(pNum);
+    if (!Number.isNaN(lNum) && lNum > 0) setLimit(lNum);
   }, [searchParams]);
 
   const fetchData = async () => {
