@@ -30,6 +30,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (body.name !== undefined && typeof body.name !== "string") return NextResponse.json({ statusCode: 400, message: "name must be string", error: "Bad Request" }, { status: 400 });
     if (body.hasContent !== undefined && typeof body.hasContent !== "boolean") return NextResponse.json({ statusCode: 400, message: "hasContent must be boolean", error: "Bad Request" }, { status: 400 });
     if (body.modelId !== undefined && !(typeof body.modelId === "number" || typeof body.modelId === "string")) return NextResponse.json({ statusCode: 400, message: "modelId must be number", error: "Bad Request" }, { status: 400 });
+    if (body.status !== undefined && !["approved","rejected","pending","waiting"].includes(String(body.status))) return NextResponse.json({ statusCode: 400, message: "status invalid", error: "Bad Request" }, { status: 400 });
 
     const remote = await callRemote(`/checked-models/${idNum}`, {
       method: "PUT",
@@ -38,6 +39,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
         ...(body.name !== undefined ? { name: body.name } : {}),
         ...(body.hasContent !== undefined ? { hasContent: body.hasContent } : {}),
         ...(body.modelId !== undefined ? { modelId: Number(body.modelId) } : {}),
+        ...(body.status !== undefined ? { status: String(body.status) } : {}),
       })
     });
     if (remote) {
@@ -48,6 +50,7 @@ export async function PUT(req: Request, { params }: { params: { id: string } }) 
     if (body.name !== undefined) patch.name = body.name;
     if (body.hasContent !== undefined) patch.hasContent = body.hasContent;
     if (body.modelId !== undefined) patch.modelId = Number(body.modelId);
+    if (body.status !== undefined) patch.status = String(body.status);
     const item = update(idNum, patch);
     if (!item) return NextResponse.json({ statusCode: 404, message: "Not Found", error: "Not Found" }, { status: 404 });
     return NextResponse.json(item, { status: 200 });

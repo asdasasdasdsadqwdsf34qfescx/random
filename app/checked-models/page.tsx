@@ -13,6 +13,7 @@ interface CheckedModel {
   created_at: string;
   hasContent: boolean;
   modelId?: number;
+  status?: "approved" | "rejected" | "pending" | "waiting";
   names?: ModelNameItem[];
 }
 
@@ -100,6 +101,7 @@ export default function CheckedModelsPage() {
             <div className="col-span-4">Name</div>
             <div className="col-span-2">Model ID</div>
             <div className="col-span-2">Content</div>
+            <div className="col-span-2">Status</div>
             <div className="col-span-2">Created</div>
             <div className="col-span-2 text-right">Actions</div>
           </div>
@@ -229,6 +231,11 @@ function Row({ item, onEdit }: { item: CheckedModel; onEdit: () => void }) {
             {item.hasContent ? "Yes" : "No"}
           </span>
         </div>
+        <div className="col-span-2">
+          <span className="px-2 py-1 rounded text-xs bg-white/10 text-white/80">
+            {(item.status ?? "pending").toString()}
+          </span>
+        </div>
         <div className="col-span-2 text-sm text-white/70">{new Date(item.created_at).toLocaleString()}</div>
         <div className="col-span-2 text-right flex items-center justify-end gap-2">
           <button onClick={(e) => { e.stopPropagation(); onEdit(); }} className="px-2 py-1 text-xs rounded bg-white/10 hover:bg-white/15">Edit</button>
@@ -278,6 +285,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
   const [name, setName] = useState(item?.name || "");
   const [modelId, setModelId] = useState(item?.modelId?.toString() || "");
   const [hasContent, setHasContent] = useState(item?.hasContent || false);
+  const [status, setStatus] = useState<"approved" | "rejected" | "pending" | "waiting">((item?.status as any) || "pending");
   const [saving, setSaving] = useState(false);
   const valid = name.trim().length > 0 && (modelId.trim() === "" || /^(?:0|[1-9]\d*)$/.test(modelId));
 
@@ -363,7 +371,7 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
     if (!valid) return;
     try {
       setSaving(true);
-      const payload: any = { name: name.trim(), hasContent };
+      const payload: any = { name: name.trim(), hasContent, status };
       if (modelId.trim() !== "") payload.modelId = Number(modelId);
       const r = await fetch(mode === "create" ? "/api/checked-models" : `/api/checked-models/${item!.id}` , {
         method: mode === "create" ? "POST" : "PUT",
@@ -437,6 +445,15 @@ function EditModal({ mode, item, onClose, onSaved }: { mode: "create" | "edit"; 
           <div className="flex items-center gap-2">
             <input id="hasContent" type="checkbox" checked={hasContent} onChange={(e) => setHasContent(e.target.checked)} />
             <label htmlFor="hasContent" className="text-sm">Has content</label>
+          </div>
+          <div>
+            <label className="block text-sm mb-1">Status</label>
+            <select value={status} onChange={(e) => setStatus(e.target.value as any)} className="w-full bg-white/5 border border-white/10 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+              <option value="approved">approved</option>
+              <option value="rejected">rejected</option>
+              <option value="pending">pending</option>
+              <option value="waiting">waiting</option>
+            </select>
           </div>
 
           {mode === "edit" && (
