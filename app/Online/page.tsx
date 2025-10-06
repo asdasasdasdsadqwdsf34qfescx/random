@@ -246,7 +246,7 @@ const OnlinePage = () => {
               >
                 <option value="">All</option>
                 <option value="approved">approved</option>
-                <option value="reject">reject</option>
+                <option value="rejected">rejected</option>
                 <option value="pending">pending</option>
                 <option value="waiting">waiting</option>
               </select>
