@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef, memo } from "react";
+import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
 import { VideoModel } from "@/app/types";
@@ -61,6 +63,24 @@ const AddModelModal = ({
 
 const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
   const [showVideo, setShowVideo] = useState(false);
+
+  const handleOpen = () => {
+    try {
+      const snapshot = {
+        id: (model as any)?.id,
+        created_at: (model as any)?.created_at ?? (model as any)?.createdAt,
+        name: model.name,
+        isOnline: (model as any)?.isOnline,
+        imageUrl: (model as any)?.imageUrl,
+        startedAt: (model as any)?.startedAt,
+        videoTags: (model as any)?.videoTags ?? null,
+        tags: (model as any)?.tags ?? null,
+        ts: Date.now()
+      };
+      localStorage.setItem(`modelSnapshot:${model.name}`, JSON.stringify(snapshot));
+    } catch {}
+  };
+
   return (
     <article
       className="group relative rounded-xl overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
@@ -86,8 +106,18 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
           />
         )}
       </div>
-      <div className="p-3">
+      <div className="p-3 flex items-center justify-between gap-2">
         <h3 className="font-semibold text-slate-900 dark:text-slate-100 truncate" title={model.name}>{model.name}</h3>
+        <Link
+          href={`/Online/${encodeURIComponent(model.name)}`}
+          target="_blank"
+          rel="noopener noreferrer"
+          onClick={handleOpen}
+          className="shrink-0 px-2 py-1 rounded-md text-sm bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
+          aria-label={`Open ${model.name} in new tab`}
+        >
+          Open
+        </Link>
       </div>
     </article>
   );
@@ -103,11 +133,33 @@ const OnlinePage = () => {
   const { isOpen } = useSidebar();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
+  const [onlyPinned, setOnlyPinned] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+  const [status, setStatus] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
+
+  useEffect(() => {
+    const initialPinned = searchParams?.get?.("pinned");
+    if (initialPinned !== null) {
+      const p = initialPinned === "true" || initialPinned === "1";
+      setOnlyPinned(p);
+    }
+    const s = searchParams?.get?.("status");
+    setStatus(s || undefined);
+    const pStr = searchParams?.get?.("page");
+    const lStr = searchParams?.get?.("limit");
+    const pNum = pStr ? parseInt(pStr, 10) : NaN;
+    const lNum = lStr ? parseInt(lStr, 10) : NaN;
+    if (!Number.isNaN(pNum) && pNum > 0) setPage(pNum);
+    if (!Number.isNaN(lNum) && lNum > 0) setLimit(lNum);
+  }, [searchParams]);
 
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels();
+      const onlineModels = await getOnlineModels({ pinned: onlyPinned, status, page, limit });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
@@ -133,7 +185,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, []);
+  }, [onlyPinned, status, page, limit]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -173,6 +225,73 @@ const OnlinePage = () => {
                 placeholder="Search by name…"
                 className="w-56 px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800"
               />
+              <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
+                <input
+                  type="checkbox"
+                  checked={onlyPinned}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setOnlyPinned(checked);
+                    const params = new URLSearchParams(searchParams?.toString?.() || "");
+                    if (checked) params.set("pinned", "true"); else params.delete("pinned");
+                    const qs = params.toString();
+                    router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                  }}
+                />
+                Favorite
+              </label>
+              <select
+                value={status ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || undefined;
+                  setStatus(v);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  if (v) params.set("status", v); else params.delete("status");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+              >
+                <option value="">All</option>
+                <option value="approved">approved</option>
+                <option value="rejected">rejected</option>
+                <option value="pending">pending</option>
+                <option value="waiting">waiting</option>
+              </select>
+              <select
+                value={String(limit)}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  const nextLimit = Number.isNaN(v) || v <= 0 ? 20 : v;
+                  setLimit(nextLimit);
+                  setPage(1);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  params.set("limit", String(nextLimit));
+                  params.set("page", "1");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+              </select>
+              <button
+                onClick={() => {
+                  setLimit(20);
+                  setPage(1);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  params.delete("limit");
+                  params.set("page", "1");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700"
+              >
+                Reset limit
+              </button>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
@@ -206,6 +325,40 @@ const OnlinePage = () => {
             <p className="text-slate-500">No live broadcasts right now. Please check back soon.</p>
           </div>
         )}
+
+        <div className="mt-6 flex items-center justify-between">
+          <button
+            onClick={() => {
+              if (page <= 1) return;
+              const next = page - 1;
+              setPage(next);
+              const params = new URLSearchParams(searchParams?.toString?.() || "");
+              params.set("page", String(next));
+              const qs = params.toString();
+              router.replace(qs ? `?${qs}` : "?", { scroll: false });
+            }}
+            disabled={page <= 1}
+            className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <div className="text-sm text-slate-500">Page {page}</div>
+          <button
+            onClick={() => {
+              if (online.length < limit) return;
+              const next = page + 1;
+              setPage(next);
+              const params = new URLSearchParams(searchParams?.toString?.() || "");
+              params.set("page", String(next));
+              const qs = params.toString();
+              router.replace(qs ? `?${qs}` : "?", { scroll: false });
+            }}
+            disabled={online.length < limit}
+            className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
         </div>
       </main>
 
