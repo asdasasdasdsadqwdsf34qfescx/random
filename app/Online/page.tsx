@@ -137,6 +137,8 @@ const OnlinePage = () => {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [status, setStatus] = useState<string | undefined>(undefined);
+  const [page, setPage] = useState(1);
+  const [limit, setLimit] = useState(20);
 
   useEffect(() => {
     const initialPinned = searchParams?.get?.("pinned");
