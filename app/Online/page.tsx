@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo, useRef, memo } from "react";
 import Link from "next/link";
+import { useRouter, useSearchParams } from "next/navigation";
 import Sidebar from "../components/Sidebar";
 import { useSidebar } from "../components/ui/SidebarContext";
 import { VideoModel } from "@/app/types";
@@ -137,12 +138,21 @@ const OnlinePage = () => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
   const [onlyPinned, setOnlyPinned] = useState(false);
-  const [sourceChaturbate, setSourceChaturbate] = useState(false);
+  const router = useRouter();
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const initialPinned = searchParams?.get?.("pinned");
+    if (initialPinned !== null) {
+      const p = initialPinned === "true" || initialPinned === "1";
+      setOnlyPinned(p);
+    }
+  }, [searchParams]);
 
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels({ pinned: onlyPinned, source: sourceChaturbate ? "chaturbate" : undefined });
+      const onlineModels = await getOnlineModels({ pinned: onlyPinned });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
@@ -168,7 +178,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [onlyPinned, sourceChaturbate]);
+  }, [onlyPinned]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -212,17 +222,16 @@ const OnlinePage = () => {
                 <input
                   type="checkbox"
                   checked={onlyPinned}
-                  onChange={(e) => setOnlyPinned(e.target.checked)}
+                  onChange={(e) => {
+                    const checked = e.target.checked;
+                    setOnlyPinned(checked);
+                    const params = new URLSearchParams(searchParams?.toString?.() || "");
+                    if (checked) params.set("pinned", "true"); else params.delete("pinned");
+                    const qs = params.toString();
+                    router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                  }}
                 />
                 Favorite
-              </label>
-              <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
-                <input
-                  type="checkbox"
-                  checked={sourceChaturbate}
-                  onChange={(e) => setSourceChaturbate(e.target.checked)}
-                />
-                Chaturbate
               </label>
               <button
                 onClick={() => setShowAddModal(true)}
