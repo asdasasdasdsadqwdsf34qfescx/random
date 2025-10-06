@@ -75,6 +75,7 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
         startedAt: (model as any)?.startedAt,
         videoTags: (model as any)?.videoTags ?? null,
         tags: (model as any)?.tags ?? null,
+        checkedModel: (model as any)?.checkedModel ?? null,
         ts: Date.now()
       };
       localStorage.setItem(`modelSnapshot:${model.name}`, JSON.stringify(snapshot));
@@ -257,6 +258,7 @@ const OnlinePage = () => {
                 <option value="rejected">rejected</option>
                 <option value="pending">pending</option>
                 <option value="waiting">waiting</option>
+                <option value="non-checked">non-checked</option>
               </select>
               <select
                 value={String(limit)}
@@ -277,6 +279,7 @@ const OnlinePage = () => {
                 <option value="20">20</option>
                 <option value="30">30</option>
                 <option value="50">50</option>
+                <option value="50">100</option>
               </select>
               <button
                 onClick={() => {

@@ -68,10 +68,6 @@ const OnlineModelPage = () => {
             <h1 className="text-2xl font-semibold truncate" title={name}>{name}</h1>
           </header>
 
-          {error && (
-            <div className="mb-4 p-3 rounded-md border border-red-200 bg-red-50 text-red-700 dark:border-red-900/50 dark:bg-red-950/40">{error}</div>
-          )}
-
           <section className="grid grid-cols-1 lg:grid-cols-3 gap-4 items-start">
             <div className="lg:col-span-2">
               <div className="relative w-full bg-black rounded-xl overflow-hidden border border-slate-200 dark:border-slate-700">
@@ -95,15 +91,14 @@ const OnlineModelPage = () => {
                   <h2 className="font-semibold mb-3">Info</h2>
                   <ul className="space-y-1 text-sm">
                     <li><span className="text-slate-500">ID:</span> {(data as any)?.id ?? "-"}</li>
+                    <li><span className="text-slate-500">Checks:</span> {(data as any)?.checkedModel?.length ?? "-"}</li>
+
                     <li><span className="text-slate-500">Created at:</span> {((data as any)?.created_at ? new Date((data as any).created_at).toLocaleString() : "-")}</li>
                     <li><span className="text-slate-500">Started at:</span> {((data as any)?.startedAt ? new Date((data as any).startedAt).toLocaleString() : "-")}</li>
                     <li><span className="text-slate-500">Online:</span> {((data as any)?.isOnline === true ? "Yes" : ((data as any)?.isOnline === false ? "No" : "-"))}</li>
                     <li><span className="text-slate-500">Tags:</span> {Array.isArray((data as any)?.tags) ? (data as any).tags.join(", ") : ((data as any)?.tags || "-")}</li>
                     <li><span className="text-slate-500">Video tags:</span> {Array.isArray((data as any)?.videoTags) ? (data as any).videoTags.join(", ") : ((data as any)?.videoTags || "-")}</li>
                   </ul>
-                  {((data as any)?.imageUrl) && (
-                    <img src={(data as any).imageUrl} alt={name} className="mt-3 rounded-lg w-full object-cover" />
-                  )}
                 </div>
               ) : (
                 <div className="text-slate-500">No data available.</div>
