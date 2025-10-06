@@ -62,6 +62,28 @@ const AddModelModal = ({
 
 const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
   const [showVideo, setShowVideo] = useState(false);
+
+  const handleOpen = () => {
+    try {
+      const snapshot = {
+        id: model.id,
+        name: model.name,
+        imageUrl: model.imageUrl,
+        averageRating: model.averageRating,
+        videoCount: model.videoCount,
+        onlineCount: model.onlineCount,
+        body: model.body,
+        hair: model.hair,
+        legs: model.legs,
+        pussy: model.pussy,
+        avatarLink: model.avatarLink,
+        links: Array.isArray(model.links) ? model.links.slice(0, 20) : [],
+        ts: Date.now()
+      };
+      localStorage.setItem(`modelSnapshot:${model.name}`, JSON.stringify(snapshot));
+    } catch {}
+  };
+
   return (
     <article
       className="group relative rounded-xl overflow-hidden bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm border border-slate-200 dark:border-slate-700 shadow-sm hover:shadow-md transition-all"
@@ -93,6 +115,7 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
           href={`/Online/${encodeURIComponent(model.name)}`}
           target="_blank"
           rel="noopener noreferrer"
+          onClick={handleOpen}
           className="shrink-0 px-2 py-1 rounded-md text-sm bg-slate-900 text-white hover:bg-slate-800 dark:bg-slate-100 dark:text-slate-900 dark:hover:bg-slate-200"
           aria-label={`Open ${model.name} in new tab`}
         >
