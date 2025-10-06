@@ -79,6 +79,7 @@ export default function ModelDetailPage() {
   const [selectTag, setSelectTag] = useState<string>("");
   const [avatarSrc, setAvatarSrc] = useState<string>("");
   const [videoFilter, setVideoFilter] = useState<string>("");
+  const [sectionVisible, setSectionVisible] = useState<boolean>(true);
   const allTags = useMemo(
     () => Array.from(new Set([...(videoTags || []), ...(tags || [])])),
     [videoTags, tags]
@@ -375,6 +376,7 @@ export default function ModelDetailPage() {
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
       <Sidebar />
+
       <main
         className={`py-6 transition-[margin] duration-300 ${
           isOpen ? "md:ml-64" : "ml-0"
@@ -383,9 +385,7 @@ export default function ModelDetailPage() {
         <div className="w-full px-4 md:px-6">
           <div className="flex items-center justify-between flex-wrap gap-3 mb-4">
             <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                Model: {name}
-              </h1>
+        
             </div>
             <div className="flex items-center gap-2">
               <button
@@ -407,6 +407,12 @@ export default function ModelDetailPage() {
               >
                 {editMode ? "Cancel" : "Edit"}
               </button>
+              <button
+          onClick={() => setSectionVisible(!sectionVisible)}
+          className="px-3 py-1.5 text-sm rounded bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 transition-colors shadow-lg"
+        >
+          {sectionVisible ? "Hide" : "Show"}
+        </button>
             </div>
           </div>
 
@@ -418,93 +424,87 @@ export default function ModelDetailPage() {
             <div className="text-sm text-slate-600">Model not found.</div>
           ) : (
             <div className="space-y-6">
+              {sectionVisible && (
               <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                <div className="flex items-center gap-4">
-                  <div className="w-40 h-40- rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
-                    {avatarSrc ? (
-                      <img
-                        src={avatarSrc}
-                        alt={name}
-                        className="w-full h-full object-cover"
-                      />
-                    ) : (
-                      name?.charAt(0)?.toUpperCase() || "?"
-                    )}
-                  </div>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 flex-wrap">
-                      <h2 className="text-xl font-semibold">{name}</h2>
-                      {isOnline ? (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                          Online
-                        </span>
+                  <div className="flex items-center gap-4">
+                    <div className="w-40 h-40- rounded-full overflow-hidden bg-slate-200 dark:bg-slate-800 flex items-center justify-center text-2xl font-semibold text-slate-700 dark:text-slate-200">
+                      {avatarSrc ? (
+                        <img
+                          src={avatarSrc}
+                          alt={name}
+                          className="w-full h-full object-cover"
+                        />
                       ) : (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">
-                          Offline
-                        </span>
-                      )}
-                      {checkedModel?.hasContent && (
-                        <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                          hasContent
-                        </span>
-                      )}
-                      {checkedModel && (
-                        <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-                          <svg
-                            viewBox="0 0 20 20"
-                            className="w-3 h-3"
-                            aria-hidden
-                          >
-                            <path
-                              fill="currentColor"
-                              d="M7.629 13.314a1 1 0 0 1-1.258.062l-.095-.082-2.5-2.5a1 1 0 0 1 1.32-1.497l.094.083L7 10.586l6.439-6.44a1 1 0 0 1 1.497 1.32l-.083.094-7 7-.062.055-.074.054Z"
-                            />
-                          </svg>
-                          Checked
-                        </span>
-                      )}
-                    </div>
-                    <span className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
-                      Videos: {videos.length}
-                    </span>
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
-                      {allTags.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span>Tags:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {allTags.map((tag) => (
-                              <span
-                                key={tag}
-                                className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
-                              >
-                                {tag}
-                              </span>
-                            ))}
-                          </div>
-                        </div>
+                        name?.charAt(0)?.toUpperCase() || "?"
                       )}
                     </div>
 
-                    <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
-                      {modelNames.length > 0 && (
-                        <div className="flex items-center gap-1">
-                          <span>Names:</span>
-                          <div className="flex flex-wrap gap-1">
-                            {modelNames.map((name) => (
-                              <span
-                                key={name.id}
-                                className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
-                              >
-                                {name.name}
-                              </span>
-                            ))} 
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 flex-wrap">
+                        <h2 className="text-xl font-semibold">{name}</h2>
+                        {isOnline ? (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+                            Online
+                          </span>
+                        ) : (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-slate-500/20 text-slate-600 dark:text-slate-400">
+                            Offline
+                          </span>
+                        )}
+                        {checkedModel?.hasContent && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
+                            Approved
+                          </span>
+                        )}
+                        {checkedModel && (
+                          <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
+
+                            Checked
+                          </span>
+                        )}
+                      </div>
+                      <span className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                        Videos: {videos.length}
+                      </span>
+                      <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                        {allTags.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span>Tags:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {allTags.map((tag) => (
+                                <span
+                                  key={tag}
+                                  className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
+                                >
+                                  {tag}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                      )}
+                        )}
+                      </div>
+
+                      <div className="text-sm text-slate-600 dark:text-slate-400 mt-1 flex gap-4 flex-wrap">
+                        {modelNames.length > 0 && (
+                          <div className="flex items-center gap-1">
+                            <span>Names:</span>
+                            <div className="flex flex-wrap gap-1">
+                              {modelNames.map((name) => (
+                                <span
+                                  key={name.id}
+                                  className="px-1.5 py-0.5 rounded bg-slate-200 dark:bg-slate-700 text-xs text-slate-700 dark:text-slate-300"
+                                >
+                                  {name.name}
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
-                </div>
               </section>
+              )}
               {/* Model data (hidden unless editing) */}
               {editMode && (
                 <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
