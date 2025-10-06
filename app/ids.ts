@@ -100,9 +100,9 @@ export async function getVideos() {
   return await response.json();
 }
 
-export async function getOnlineModels(opts?: { favorite?: boolean; source?: string }) {
+export async function getOnlineModels(opts?: { pinned?: boolean; source?: string }) {
   const url = new URL("http://localhost:3001/model/cb");
-  if (opts?.favorite) url.searchParams.append("favorite", "true");
+  if (opts?.pinned) url.searchParams.append("pinned", "true");
   if (opts?.source) url.searchParams.append("source", opts.source);
 
   const response = await fetch(url.toString(), {

@@ -113,13 +113,13 @@ const OnlinePage = () => {
   const { isOpen } = useSidebar();
   const [showAddModal, setShowAddModal] = useState(false);
   const [newModelName, setNewModelName] = useState("");
-  const [onlyFavorite, setOnlyFavorite] = useState(false);
+  const [onlyPinned, setOnlyPinned] = useState(false);
   const [sourceChaturbate, setSourceChaturbate] = useState(false);
 
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels({ favorite: onlyFavorite, source: sourceChaturbate ? "chaturbate" : undefined });
+      const onlineModels = await getOnlineModels({ pinned: onlyPinned, source: sourceChaturbate ? "chaturbate" : undefined });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
@@ -145,7 +145,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [onlyFavorite, sourceChaturbate]);
+  }, [onlyPinned, sourceChaturbate]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -188,8 +188,8 @@ const OnlinePage = () => {
               <label className="flex items-center gap-2 text-sm px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800">
                 <input
                   type="checkbox"
-                  checked={onlyFavorite}
-                  onChange={(e) => setOnlyFavorite(e.target.checked)}
+                  checked={onlyPinned}
+                  onChange={(e) => setOnlyPinned(e.target.checked)}
                 />
                 Favorite
               </label>
