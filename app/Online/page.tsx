@@ -151,7 +151,7 @@ const OnlinePage = () => {
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels({ pinned: onlyPinned, status });
+      const onlineModels = await getOnlineModels({ pinned: onlyPinned, status, page, limit });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
