@@ -100,8 +100,10 @@ export async function getVideos() {
   return await response.json();
 }
 
-export async function getOnlineModels() {
+export async function getOnlineModels(opts?: { favorite?: boolean; source?: string }) {
   const url = new URL("http://localhost:3001/model/cb");
+  if (opts?.favorite) url.searchParams.append("favorite", "true");
+  if (opts?.source) url.searchParams.append("source", opts.source);
 
   const response = await fetch(url.toString(), {
     method: "GET",
@@ -110,7 +112,9 @@ export async function getOnlineModels() {
     },
   });
 
+  if (!response.ok) {
+    throw new Error(`Failed to load online models. Status: ${response.status}`);
+  }
+
   return await response.json();
 }
-
-
