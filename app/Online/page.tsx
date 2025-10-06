@@ -279,6 +279,20 @@ const OnlinePage = () => {
                 <option value="50">50</option>
               </select>
               <button
+                onClick={() => {
+                  setLimit(20);
+                  setPage(1);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  params.delete("limit");
+                  params.set("page", "1");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700"
+              >
+                Reset limit
+              </button>
+              <button
                 onClick={() => setShowAddModal(true)}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
               >
