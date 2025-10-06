@@ -311,6 +311,40 @@ const OnlinePage = () => {
             <p className="text-slate-500">No live broadcasts right now. Please check back soon.</p>
           </div>
         )}
+
+        <div className="mt-6 flex items-center justify-between">
+          <button
+            onClick={() => {
+              if (page <= 1) return;
+              const next = page - 1;
+              setPage(next);
+              const params = new URLSearchParams(searchParams?.toString?.() || "");
+              params.set("page", String(next));
+              const qs = params.toString();
+              router.replace(qs ? `?${qs}` : "?", { scroll: false });
+            }}
+            disabled={page <= 1}
+            className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50"
+          >
+            Previous
+          </button>
+          <div className="text-sm text-slate-500">Page {page}</div>
+          <button
+            onClick={() => {
+              if (online.length < limit) return;
+              const next = page + 1;
+              setPage(next);
+              const params = new URLSearchParams(searchParams?.toString?.() || "");
+              params.set("page", String(next));
+              const qs = params.toString();
+              router.replace(qs ? `?${qs}` : "?", { scroll: false });
+            }}
+            disabled={online.length < limit}
+            className="px-3 py-2 rounded-md border border-slate-300 dark:border-slate-700 disabled:opacity-50"
+          >
+            Next
+          </button>
+        </div>
         </div>
       </main>
 
