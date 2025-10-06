@@ -196,6 +196,7 @@ const OnlineModelPage = () => {
                     <ul className="space-y-1 text-sm">
                       <li><span className="text-slate-500">ID:</span> {(data as any)?.model?.id ?? "-"}</li>
                       <li><span className="text-slate-500">Checks:</span> {checks}</li>
+                      <li><span className="text-slate-500">Status:</span> {checkedModel ? String(checkedModel.status ?? "pending") : "-"}</li>
                       <li><span className="text-slate-500">Created at:</span> {((data as any)?.model?.created_at ? new Date((data as any).model.created_at).toLocaleString() : "-")}</li>
                       <li><span className="text-slate-500">Started at:</span> {((data as any)?.model?.startedAt ? new Date((data as any).model.startedAt).toLocaleString() : "-")}</li>
                       <li><span className="text-slate-500">Online:</span> {((data as any)?.model?.isOnline === true ? "Yes" : ((data as any)?.model?.isOnline === false ? "No" : "-"))}</li>
@@ -233,7 +234,7 @@ const OnlineModelPage = () => {
                         </div>
                         <div>
                           <label className="block text-sm mb-1">Status</label>
-                          <select value={cmStatus} onChange={(e) => setCmStatus(e.target.value as any)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm">
+                          <select value={cmStatus} onChange={(e) => setCmStatus(e.target.value as any)} className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm text-slate-900 dark:text-white">
                             <option value="approved">approved</option>
                             <option value="rejected">rejected</option>
                             <option value="pending">pending</option>
