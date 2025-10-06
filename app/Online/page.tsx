@@ -258,6 +258,26 @@ const OnlinePage = () => {
                 <option value="pending">pending</option>
                 <option value="waiting">waiting</option>
               </select>
+              <select
+                value={String(limit)}
+                onChange={(e) => {
+                  const v = parseInt(e.target.value, 10);
+                  const nextLimit = Number.isNaN(v) || v <= 0 ? 20 : v;
+                  setLimit(nextLimit);
+                  setPage(1);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  params.set("limit", String(nextLimit));
+                  params.set("page", "1");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+              >
+                <option value="10">10</option>
+                <option value="20">20</option>
+                <option value="30">30</option>
+                <option value="50">50</option>
+              </select>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
