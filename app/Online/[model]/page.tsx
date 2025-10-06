@@ -66,11 +66,6 @@ const OnlineModelPage = () => {
         <div className="w-full px-[5px]">
           <header className="mb-4">
             <h1 className="text-2xl font-semibold truncate" title={name}>{name}</h1>
-            {data && (
-              <p className="text-sm text-slate-500 dark:text-slate-400">
-                {data.videoCount ?? 0} videos • Rating {Number(data.averageRating ?? 0).toFixed(2)} • Online {data.onlineCount ?? 0}
-              </p>
-            )}
           </header>
 
           {error && (
@@ -97,16 +92,18 @@ const OnlineModelPage = () => {
                 <div className="h-40 rounded-xl bg-slate-200 dark:bg-slate-800 animate-pulse" />
               ) : data ? (
                 <div className="rounded-xl border border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 p-4">
-                  <h2 className="font-semibold mb-3">Details</h2>
+                  <h2 className="font-semibold mb-3">Info</h2>
                   <ul className="space-y-1 text-sm">
-                    <li><span className="text-slate-500">Average rating:</span> {Number(data.averageRating ?? 0).toFixed(2)}</li>
-                    <li><span className="text-slate-500">Videos:</span> {data.videoCount ?? 0}</li>
-                    <li><span className="text-slate-500">Online count:</span> {data.onlineCount ?? 0}</li>
-                    <li><span className="text-slate-500">Body:</span> {data.body ?? 0}</li>
-                    <li><span className="text-slate-500">Hair:</span> {data.hair ?? 0}</li>
-                    <li><span className="text-slate-500">Legs:</span> {data.legs ?? 0}</li>
-                    <li><span className="text-slate-500">Pussy:</span> {data.pussy ?? 0}</li>
+                    <li><span className="text-slate-500">ID:</span> {(data as any)?.id ?? "-"}</li>
+                    <li><span className="text-slate-500">Created at:</span> {((data as any)?.created_at ? new Date((data as any).created_at).toLocaleString() : "-")}</li>
+                    <li><span className="text-slate-500">Started at:</span> {((data as any)?.startedAt ? new Date((data as any).startedAt).toLocaleString() : "-")}</li>
+                    <li><span className="text-slate-500">Online:</span> {((data as any)?.isOnline === true ? "Yes" : ((data as any)?.isOnline === false ? "No" : "-"))}</li>
+                    <li><span className="text-slate-500">Tags:</span> {Array.isArray((data as any)?.tags) ? (data as any).tags.join(", ") : ((data as any)?.tags || "-")}</li>
+                    <li><span className="text-slate-500">Video tags:</span> {Array.isArray((data as any)?.videoTags) ? (data as any).videoTags.join(", ") : ((data as any)?.videoTags || "-")}</li>
                   </ul>
+                  {((data as any)?.imageUrl) && (
+                    <img src={(data as any).imageUrl} alt={name} className="mt-3 rounded-lg w-full object-cover" />
+                  )}
                 </div>
               ) : (
                 <div className="text-slate-500">No data available.</div>

@@ -67,18 +67,14 @@ const OnlineModelCard = memo(({ model }: { model: VideoModel }) => {
   const handleOpen = () => {
     try {
       const snapshot = {
-        id: model.id,
+        id: (model as any)?.id,
+        created_at: (model as any)?.created_at ?? (model as any)?.createdAt,
         name: model.name,
-        imageUrl: model.imageUrl,
-        averageRating: model.averageRating,
-        videoCount: model.videoCount,
-        onlineCount: model.onlineCount,
-        body: model.body,
-        hair: model.hair,
-        legs: model.legs,
-        pussy: model.pussy,
-        avatarLink: model.avatarLink,
-        links: Array.isArray(model.links) ? model.links.slice(0, 20) : [],
+        isOnline: (model as any)?.isOnline,
+        imageUrl: (model as any)?.imageUrl,
+        startedAt: (model as any)?.startedAt,
+        videoTags: (model as any)?.videoTags ?? null,
+        tags: (model as any)?.tags ?? null,
         ts: Date.now()
       };
       localStorage.setItem(`modelSnapshot:${model.name}`, JSON.stringify(snapshot));
