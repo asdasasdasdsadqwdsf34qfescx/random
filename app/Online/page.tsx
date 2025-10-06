@@ -136,6 +136,7 @@ const OnlinePage = () => {
   const [onlyPinned, setOnlyPinned] = useState(false);
   const router = useRouter();
   const searchParams = useSearchParams();
+  const [status, setStatus] = useState<string | undefined>(undefined);
 
   useEffect(() => {
     const initialPinned = searchParams?.get?.("pinned");
@@ -143,12 +144,14 @@ const OnlinePage = () => {
       const p = initialPinned === "true" || initialPinned === "1";
       setOnlyPinned(p);
     }
+    const s = searchParams?.get?.("status");
+    setStatus(s || undefined);
   }, [searchParams]);
 
   const fetchData = async () => {
     try {
       setError(null);
-      const onlineModels = await getOnlineModels({ pinned: onlyPinned });
+      const onlineModels = await getOnlineModels({ pinned: onlyPinned, status });
       if (Array.isArray(onlineModels)) {
         setOnline(onlineModels);
         setLastUpdated(new Date());
@@ -174,7 +177,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [onlyPinned]);
+  }, [onlyPinned, status]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
@@ -229,6 +232,24 @@ const OnlinePage = () => {
                 />
                 Favorite
               </label>
+              <select
+                value={status ?? ""}
+                onChange={(e) => {
+                  const v = e.target.value || undefined;
+                  setStatus(v);
+                  const params = new URLSearchParams(searchParams?.toString?.() || "");
+                  if (v) params.set("status", v); else params.delete("status");
+                  const qs = params.toString();
+                  router.replace(qs ? `?${qs}` : "?", { scroll: false });
+                }}
+                className="px-2 py-2 rounded-md border border-slate-300 dark:border-slate-700 bg-white dark:bg-slate-800 text-sm"
+              >
+                <option value="">All</option>
+                <option value="approved">approved</option>
+                <option value="reject">reject</option>
+                <option value="pending">pending</option>
+                <option value="waiting">waiting</option>
+              </select>
               <button
                 onClick={() => setShowAddModal(true)}
                 className="px-3 py-2 rounded-md bg-emerald-600 text-white hover:bg-emerald-500"
