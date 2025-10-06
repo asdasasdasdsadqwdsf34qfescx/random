@@ -34,6 +34,7 @@ type CheckedModel = {
   name: string;
   hasContent: boolean;
   modelId?: number;
+  status?: "approved" | "rejected" | "pending" | "waiting";
 };
 
 type ModelDataResponse = {
@@ -274,6 +275,7 @@ export default function ModelDetailPage() {
   const [cmName, setCmName] = useState<string>("");
   const [cmHasContent, setCmHasContent] = useState<boolean>(false);
   const [cmModelId, setCmModelId] = useState<string>("");
+  const [cmStatus, setCmStatus] = useState<"approved" | "rejected" | "pending" | "waiting">("pending");
 
   useEffect(() => {
     if (checkedModel) {
@@ -282,6 +284,7 @@ export default function ModelDetailPage() {
       setCmModelId(
         checkedModel.modelId != null ? String(checkedModel.modelId) : ""
       );
+      setCmStatus((checkedModel.status as any) || "pending");
     } else {
       setCmName(name);
       setCmHasContent(false);
@@ -292,7 +295,7 @@ export default function ModelDetailPage() {
   const saveCheckedModel = async () => {
     try {
       setCmBusy(true);
-      const payload: any = { name: cmName.trim(), hasContent: cmHasContent };
+      const payload: any = { name: cmName.trim(), hasContent: cmHasContent, status: cmStatus };
       if (cmModelId.trim() !== "") payload.modelId = Number(cmModelId);
       const url = checkedModel
         ? `/api/checked-models/${checkedModel.id}`
@@ -395,17 +398,10 @@ export default function ModelDetailPage() {
                 Back to Models
               </button>
               <button
-                onClick={() => {
-                  if (editMode) {
-                    resetFormFromModel();
-                    setEditMode(false);
-                  } else {
-                    setEditMode(true);
-                  }
-                }}
+                onClick={() => setEditMode((v) => !v)}
                 className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500"
               >
-                {editMode ? "Cancel" : "Edit"}
+                {editMode ? "Cancel" : "Edit CheckedModel"}
               </button>
               <button
           onClick={() => setSectionVisible(!sectionVisible)}
@@ -451,14 +447,13 @@ export default function ModelDetailPage() {
                             Offline
                           </span>
                         )}
-                        {checkedModel?.hasContent && (
-                          <span className="px-2 py-0.5 text-xs rounded-full bg-indigo-500/20 text-indigo-600 dark:text-indigo-400">
-                            Approved
+                        {checkedModel && (
+                          <span className="px-2 py-0.5 text-xs rounded-full bg-white/10 text-white/80">
+                            Status: {(checkedModel.status ?? "pending").toString()}
                           </span>
                         )}
                         {checkedModel && (
                           <span className="inline-flex items-center gap-1 px-2 py-0.5 text-xs rounded-full bg-emerald-500/20 text-emerald-600 dark:text-emerald-400">
-
                             Checked
                           </span>
                         )}
@@ -505,173 +500,7 @@ export default function ModelDetailPage() {
                   </div>
               </section>
               )}
-              {/* Model data (hidden unless editing) */}
-              {editMode && (
-                <section className="bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-lg p-4">
-                  <div className="flex items-center justify-between mb-3">
-                    <h2 className="text-lg font-semibold">Model data</h2>
-                    <button
-                      onClick={saveModel}
-                      disabled={savingModel || !model?.id}
-                      className="px-3 py-1.5 text-sm rounded bg-emerald-600 hover:bg-emerald-500 disabled:opacity-50"
-                    >
-                      {savingModel ? "Saving..." : "Save"}
-                    </button>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div>
-                      <div className="text-xs text-slate-500">ID</div>
-                      <div className="text-sm">{model?.id}</div>
-                    </div>
-                    <div>
-                      <div className="text-xs text-slate-500">Name</div>
-                      <div className="text-sm">{model?.name}</div>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <input
-                        id="m-online"
-                        type="checkbox"
-                        checked={isOnline}
-                        onChange={(e) => setIsOnline(e.target.checked)}
-                      />
-                      <label htmlFor="m-online" className="text-sm">
-                        Is online
-                      </label>
-                    </div>
-                    <div>
-                      <label className="block text-sm mb-1">Image URL</label>
-                      <input
-                        value={imageUrl}
-                        onChange={(e) => setImageUrl(e.target.value)}
-                        className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
-                      />
-                    </div>
-                    <div>
-                      <label className="block text-sm mb-1">Started at</label>
-                      <input
-                        type="datetime-local"
-                        value={startedAt}
-                        onChange={(e) => setStartedAt(e.target.value)}
-                        className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mt-4">
-                    <div>
-                      <div className="text-sm font-medium mb-2">Video tags</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <select
-                          value={selectVideoTag}
-                          onChange={(e) => setSelectVideoTag(e.target.value)}
-                          className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
-                        >
-                          <option value="">Select tag</option>
-                          {ALLOWED_VIDEO_TAGS.filter(
-                            (t) => !videoTags.includes(t)
-                          ).map((t) => (
-                            <option key={t} value={t}>
-                              {t}
-                            </option>
-                          ))}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addArrayItem(
-                              selectVideoTag,
-                              videoTags,
-                              setVideoTags
-                            );
-                            setSelectVideoTag("");
-                          }}
-                          disabled={!selectVideoTag}
-                          className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {videoTags.map((t, i) => (
-                          <span
-                            key={`${t}-${i}`}
-                            onClick={() => setVideoFilter(t)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900"
-                          >
-                            {t}
-                            {editMode && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeArrayItem(i, videoTags, setVideoTags);
-                                }}
-                                className="text-slate-500 hover:text-slate-800"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                    <div>
-                      <div className="text-sm font-medium mb-2">Tags</div>
-                      <div className="flex items-center gap-2 mb-2">
-                        <select
-                          value={selectTag}
-                          onChange={(e) => setSelectTag(e.target.value)}
-                          className="flex-1 bg-white text-slate-900 border border-slate-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 dark:bg-slate-800 dark:text-white dark:border-slate-600"
-                        >
-                          <option value="">Select tag</option>
-                          {ALLOWED_TAGS.filter((t) => !tags.includes(t)).map(
-                            (t) => (
-                              <option key={t} value={t}>
-                                {t}
-                              </option>
-                            )
-                          )}
-                        </select>
-                        <button
-                          type="button"
-                          onClick={() => {
-                            addArrayItem(selectTag, tags, setTags);
-                            setSelectTag("");
-                          }}
-                          disabled={!selectTag}
-                          className="px-3 py-2 text-sm rounded bg-indigo-600 hover:bg-indigo-500 disabled:opacity-50"
-                        >
-                          Add
-                        </button>
-                      </div>
-                      <div className="flex flex-wrap gap-2">
-                        {tags.map((t, i) => (
-                          <span
-                            key={`${t}-${i}`}
-                            onClick={() => setVideoFilter(t)}
-                            className="inline-flex items-center gap-1 px-2 py-1 rounded bg-slate-200 dark:bg-slate-800 text-xs cursor-pointer hover:bg-indigo-100 dark:hover:bg-indigo-900"
-                          >
-                            {t}
-                            {editMode && (
-                              <button
-                                type="button"
-                                onClick={(e) => {
-                                  e.stopPropagation();
-                                  removeArrayItem(i, tags, setTags);
-                                }}
-                                className="text-slate-500 hover:text-slate-800"
-                              >
-                                ×
-                              </button>
-                            )}
-                          </span>
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </section>
-              )}
+              {/* Model data editing disabled as edits are restricted to CheckedModel */}
 
               {/* Checked model */}
               {editMode && (
@@ -721,7 +550,7 @@ export default function ModelDetailPage() {
                       </div>
                     </div>
                   ) : (
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                       <div>
                         <label className="block text-sm mb-1">Name</label>
                         <input
@@ -749,6 +578,19 @@ export default function ModelDetailPage() {
                         <label htmlFor="cm-has" className="text-sm">
                           Has content
                         </label>
+                      </div>
+                      <div>
+                        <label className="block text-sm mb-1">Status</label>
+                        <select
+                          value={cmStatus}
+                          onChange={(e) => setCmStatus(e.target.value as any)}
+                          className="w-full bg-white/70 dark:bg-white/10 border border-slate-200 dark:border-white/10 rounded-md px-3 py-2 text-sm"
+                        >
+                          <option value="approved">approved</option>
+                          <option value="rejected">rejected</option>
+                          <option value="pending">pending</option>
+                          <option value="waiting">waiting</option>
+                        </select>
                       </div>
                     </div>
                   )}

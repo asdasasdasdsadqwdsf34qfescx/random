@@ -25,10 +25,14 @@ export async function POST(req: Request) {
   try {
     const body = await req.json();
     if (!body || typeof body.name !== "string" || typeof body.hasContent !== "boolean" || (body.modelId !== undefined && !(typeof body.modelId === "number" || typeof body.modelId === "string"))) {
-      return NextResponse.json({ statusCode: 400, message: "Invalid body. Expect { name: string, hasContent: boolean, modelId?: number }", error: "Bad Request" }, { status: 400 });
+      return NextResponse.json({ statusCode: 400, message: "Invalid body. Expect { name: string, hasContent: boolean, modelId?: number, status?: 'approved'|'rejected'|'pending'|'waiting' }", error: "Bad Request" }, { status: 400 });
+    }
+    if (body.status !== undefined && !["approved","rejected","pending","waiting"].includes(String(body.status))) {
+      return NextResponse.json({ statusCode: 400, message: "Invalid status", error: "Bad Request" }, { status: 400 });
     }
 
     const remoteBody: any = { name: body.name, hasContent: Boolean(body.hasContent) };
+    if (body.status !== undefined) remoteBody.status = String(body.status);
     if (body.modelId !== undefined && body.modelId !== null && body.modelId !== "") {
       remoteBody.modelId = Number(body.modelId);
     }
@@ -45,7 +49,8 @@ export async function POST(req: Request) {
     const item = create({
       name: body.name,
       hasContent: Boolean(body.hasContent),
-      ...(body.modelId !== undefined && body.modelId !== null && body.modelId !== "" ? { modelId: Number(body.modelId) } : {})
+      ...(body.modelId !== undefined && body.modelId !== null && body.modelId !== "" ? { modelId: Number(body.modelId) } : {}),
+      ...(body.status !== undefined ? { status: String(body.status) as any } : {}),
     });
     return NextResponse.json(item, { status: 201 });
   } catch (e: any) {

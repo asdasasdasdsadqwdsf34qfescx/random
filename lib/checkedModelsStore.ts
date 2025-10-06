@@ -7,6 +7,7 @@ export interface CheckedModel {
   created_at: string;
   hasContent: boolean;
   modelId?: number;
+  status: "approved" | "rejected" | "pending" | "waiting";
 }
 
 const DATA_DIR = path.join(process.cwd(), "data");
@@ -29,7 +30,11 @@ function readRaw(): { lastId: number; items: CheckedModel[] } {
     if (!parsed || typeof parsed !== "object" || !Array.isArray(parsed.items)) {
       throw new Error("Invalid data format");
     }
-    return { lastId: parsed.lastId ?? 0, items: parsed.items as CheckedModel[] };
+    const items = (parsed.items as any[]).map((i: any) => ({
+      ...i,
+      status: typeof i?.status === "string" ? i.status : "pending",
+    })) as CheckedModel[];
+    return { lastId: parsed.lastId ?? 0, items };
   } catch (e) {
     // Attempt to recover by reinitializing
     const fresh = { lastId: 0, items: [] as CheckedModel[] };
@@ -63,11 +68,12 @@ export function getByModelId(modelId: number): CheckedModel[] {
   return items.filter((i) => i.modelId === modelId);
 }
 
-export function create(input: { name: string; hasContent: boolean; modelId?: number }): CheckedModel {
+export function create(input: { name: string; hasContent: boolean; modelId?: number; status?: CheckedModel["status"] }): CheckedModel {
   const data = readRaw();
   const id = (data.lastId || 0) + 1;
   const now = new Date().toISOString();
-  const base: CheckedModel = { id, name: String(input.name), hasContent: Boolean(input.hasContent), created_at: now };
+  const status = (input.status as CheckedModel["status"]) || "pending";
+  const base: CheckedModel = { id, name: String(input.name), hasContent: Boolean(input.hasContent), created_at: now, status };
   const item: CheckedModel = input.modelId !== undefined
     ? { ...base, modelId: Number(input.modelId) }
     : base;
@@ -77,7 +83,7 @@ export function create(input: { name: string; hasContent: boolean; modelId?: num
   return item;
 }
 
-export function update(id: number, patch: Partial<Pick<CheckedModel, "name" | "hasContent" | "modelId">>): CheckedModel | undefined {
+export function update(id: number, patch: Partial<Pick<CheckedModel, "name" | "hasContent" | "modelId" | "status">>): CheckedModel | undefined {
   const data = readRaw();
   const idx = data.items.findIndex((i) => i.id === id);
   if (idx === -1) return undefined;
@@ -87,6 +93,7 @@ export function update(id: number, patch: Partial<Pick<CheckedModel, "name" | "h
     ...(patch.name !== undefined ? { name: String(patch.name) } : {}),
     ...(patch.hasContent !== undefined ? { hasContent: Boolean(patch.hasContent) } : {}),
     ...(patch.modelId !== undefined ? { modelId: Number(patch.modelId) } : {}),
+    ...(patch.status !== undefined ? { status: patch.status as CheckedModel["status"] } : {}),
   };
   data.items[idx] = updated;
   writeRaw(data);
