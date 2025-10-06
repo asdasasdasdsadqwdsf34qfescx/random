@@ -185,7 +185,7 @@ const OnlinePage = () => {
       mounted = false;
       clearInterval(id);
     };
-  }, [onlyPinned, status]);
+  }, [onlyPinned, status, page, limit]);
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
